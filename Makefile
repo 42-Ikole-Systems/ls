@@ -41,7 +41,7 @@ clean:
 fclean: clean
 	@$(MAKE) fclean -C libkm
 	@printf "$(COLOR_RED)"
-	$(RM) $(NAME).a
+	$(RM) $(NAME)
 	$(RM) -r $(TEST)/bin/*
 	@printf "$(COLOR_RESET)"
 
