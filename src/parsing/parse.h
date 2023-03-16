@@ -15,12 +15,16 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#pragma once
+
 #include "ft_ls.h"
-#include "libkm.h"
 
-int main(int argc, const char** argv)
-{
-	ls_flags flags = 0x00;
-
-	parse(argc, argv, &flags);
-}
+/*!
+ * @brief -
+ * 
+ * @param token to check
+ * @param flags variable to store found flags
+ * 
+ * @return the amount of flags found, -1 on error
+*/
+int parse_flags(const char* token, ls_flags* flags);

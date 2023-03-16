@@ -1,6 +1,8 @@
 ifndef SRC_MK
 SRC_MK = 1
 
-SRC :=	main.c
+SRC :=	main.c \
+		parsing/flags.c \
+		parsing/parse.c
 
 endif
