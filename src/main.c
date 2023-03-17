@@ -21,6 +21,10 @@
 int main(int argc, const char** argv)
 {
 	ls_flags flags = 0x00;
+	operand_list_t* fileOperands = NULL;
+	operand_list_t* nonFileOperands = NULL;
 
-	parse(argc, argv, &flags);
+	if (parse(argc, argv, &flags, fileOperands, nonFileOperands) == false) {
+		return LS_PARSE_ERROR;
+	}
 }

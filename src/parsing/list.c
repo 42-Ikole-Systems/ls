@@ -15,42 +15,49 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#include "parse.h"
+#include <unistd.h>
 
-#include "ft_ls.h"
+void clear_list(operand_list_t* node)
+{
+	operand_list_t* tmp;
 
-/*!
- * @brief -
- * 
- * @param token to check
- * @param flags variable to store found flags
- * 
- * @return the amount of flags found, -1 on error
-*/
-int parse_flags(const char* token, ls_flags* flags);
+	while (node != NULL)
+	{
+		tmp = node;
+		node = node->next;
+		tmp->next = NULL;
+		tmp->operand = NULL;
+		free(tmp);
+	}
+}
 
-/*!
- * @brief parses operands
- *
- * @param operand -
- * @param directoryOperands -
- * @param nonDirectoryOperands -
-*/
-int parse_operand(const char* operand,  operand_list_t* directoryOperands, operand_list_t* nonDirectoryOperands);
+bool list_append(operand_list_t** list, const char* operand)
+{
+	if (list == NULL){
+		return false;
+	}
 
-/*!
- * @brief deallocates and cleans up the list
- *
- * @param list -
-*/
-void clear_list(operand_list_t* list);
+	operand_list_t* newNode;
+	newNode = malloc(sizeof(operand_list_t));
 
-/*!
- * @brief creates and appends a new node to the end of the list
- *
- * @param list pointer to the list
- * @param operand -
- * 
- * @return true on success, false on failure
-*/
-bool list_append(operand_list_t** list, const char* operand);
+	if (newNode == NULL) {
+		return false;
+	}
+
+	newNode->next = NULL;
+	newNode->operand = operand;
+
+	if (*list == NULL)
+	{
+		*list = newNode;
+	}
+	else
+	{
+		operand_list_t* node = *list;
+		while (node->next != NULL) {
+			node = node->next;
+		}
+		node->next = newNode;
+	}
+}
