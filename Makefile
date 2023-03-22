@@ -20,15 +20,6 @@ $(OBJ): $(ODIR)/%.o: $(SDIR)/%.c
 $(LIBS):
 	@$(MAKE) -C libkm
 
-# testing
-
-$(TEST)/bin/%: $(TEST)/%.c
-	@echo "$(COLOR_LBLUE)Compiling tests... $(COLOR_BLUE)$<$(COLOR_RESET)"
-	@$(CC) $(CFLAGS) $(IFLAGS) $< $(OBJ) -o $@ -lcriterion
-
-test: fclean $(NAME) $(TEST)/bin $(TESTBIN)
-	@for test in $(TESTBIN) ; do echo "\n$(COLOR_YELLOW)TEST:$(COLOR_RESET) $$test" && ./$$test ; done
-
 # Clean up
 .PHONY: clean fclean re
 
@@ -42,7 +33,6 @@ fclean: clean
 	@$(MAKE) fclean -C libkm
 	@printf "$(COLOR_RED)"
 	$(RM) $(NAME)
-	$(RM) -r $(TEST)/bin/*
 	@printf "$(COLOR_RESET)"
 
 re: fclean
@@ -54,12 +44,12 @@ re: fclean
 
 debug:
 	@$(MAKE) debug -C libkm
-	@$(MAKE) test DEBUG=1
+	@$(MAKE) re DEBUG=1
 
 leaks:
 	@$(MAKE) leaks -C libkm
-	@$(MAKE) test LEAKS=1
+	@$(MAKE) re LEAKS=1
 
 fsanitize:
 	@$(MAKE) fsanitize -C libkm
-	@$(MAKE) test FSANITIZE=1
+	@$(MAKE) re FSANITIZE=1

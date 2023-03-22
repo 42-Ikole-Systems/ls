@@ -16,7 +16,7 @@
 /* ************************************************************************** */
 
 #include "parse.h"
-#include <unistd.h>
+#include <stdlib.h>
 
 void clear_list(operand_list_t* node)
 {
@@ -27,26 +27,26 @@ void clear_list(operand_list_t* node)
 		tmp = node;
 		node = node->next;
 		tmp->next = NULL;
-		tmp->operand = NULL;
+		tmp->name = NULL;
 		free(tmp);
 	}
 }
 
-bool list_append(operand_list_t** list, const char* operand)
+operand_list_t* list_append(operand_list_t** list, const char* operand)
 {
 	if (list == NULL){
-		return false;
+		return NULL;
 	}
 
 	operand_list_t* newNode;
 	newNode = malloc(sizeof(operand_list_t));
 
 	if (newNode == NULL) {
-		return false;
+		return NULL;
 	}
 
 	newNode->next = NULL;
-	newNode->operand = operand;
+	newNode->name = operand;
 
 	if (*list == NULL)
 	{
@@ -60,4 +60,5 @@ bool list_append(operand_list_t** list, const char* operand)
 		}
 		node->next = newNode;
 	}
+	return newNode;
 }

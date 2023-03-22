@@ -12,10 +12,6 @@ SDIR	= src
 ODIR	= .obj
 IDIR	= includes libkm/includes
 
-TEST	= tests
-TESTS	= $(wildcard $(TEST)/*.c)
-TESTBIN = $(patsubst $(TEST)/%.c, $(TEST)/bin/%, $(TESTS))
-
 ifdef DEBUG
 	CFLAGS += -g -D DEBUG
 endif

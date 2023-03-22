@@ -20,27 +20,31 @@
 
 #include <ctype.h>
 
-bool parse(int argc, const char** argv, ls_flags* flags, operand_list_t* fileOperands, operand_list_t* nonFileOperands)
+bool parse(int argc, const char** argv, ls_flags* flags, operand_list_t** operand_list)
 {
+	bool success = true;
 	int i = 1;
+
 	// parse flags first
-	for (; i < argc && argv[i][0] == '-'; i++)
+	for (; success == true && i < argc && argv[i][0] == '-'; i++)
 	{
 		if (parse_flags(argv[i], flags) == LS_PARSE_ERROR)
 		{
-			km_printf("usage: ls [-%s] [file]\n", ALLOWED_LS_FLAGS);
-			return false;
+			success = false;
 		}
 	}
 	// parse operands next
-	for (; i < argc; i++)
+	for (; success == true && i < argc; i++)
 	{
-		if (parse_operand(argv[i], fileOperands, nonFileOperands) == LS_PARSE_ERROR)
+		if (parse_operand(argv[i], operand_list) == LS_PARSE_ERROR)
 		{
-			clear_list(fileOperands);
-			clear_list(nonFileOperands);
-			return false;
+			success = false;
+			clear_list(*operand_list);
 		}
 	}
-	return true;
+
+	if (success == false) {
+		km_printf("usage: ls [-%s] [file]\n", ALLOWED_LS_FLAGS);
+	}
+	return success;
 }

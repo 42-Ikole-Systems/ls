@@ -41,14 +41,15 @@
 
 	typedef enum e_operand_type
 	{
-		file,
-		symlink,
-		directory
-	};
+		file_type,
+		symlink_type,
+		directory_type
+	} operand_type;
 
 	typedef struct s_operand_list
 	{
-		const char*				operand;
+		const char*				name;
+		operand_type			type;
 		struct s_operand_list*	next;
 	} operand_list_t;
 
@@ -69,4 +70,4 @@
 	* 
 	* @note it will ignore the first argument since this should be the name of the executable.
 	*/
-	bool parse(int argc, const char** argv, ls_flags* flags, operand_list_t* fileOperands, operand_list_t* nonFileOperands);
+	bool parse(int argc, const char** argv, ls_flags* flags, operand_list_t** operand_list);
