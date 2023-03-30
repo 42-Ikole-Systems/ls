@@ -37,20 +37,3 @@ int parse_flags(const char* token, ls_flags* flags);
  * @param nonDirectoryOperands -
 */
 int parse_operand(const char* operand, operand_list_t** operand_list);
-
-/*!
- * @brief deallocates and cleans up the list
- *
- * @param list -
-*/
-void clear_list(operand_list_t* list);
-
-/*!
- * @brief creates and appends a new node to the end of the list
- *
- * @param list pointer to the list
- * @param name -
- * 
- * @return newly apended node, NULL if fails
-*/
-operand_list_t* list_append(operand_list_t** list, const char* name);

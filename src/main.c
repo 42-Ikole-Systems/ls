@@ -26,4 +26,14 @@ int main(int argc, const char** argv)
 	if (parse(argc, argv, &flags, &operand_list) == false) {
 		return LS_PARSE_ERROR;
 	}
+
+	if (operand_list == NULL)
+	{
+		// add current directory if no operand is given
+		if (list_append(&operand_list, ".") == NULL) {
+			return LS_ERROR;
+		}
+	}
+
+	return list_operands(operand_list);
 }

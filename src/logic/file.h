@@ -15,50 +15,20 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parse.h"
-#include <stdlib.h>
+#pragma once
 
-void clear_list(operand_list_t* node)
-{
-	operand_list_t* tmp;
+#include "ft_ls.h"
 
-	while (node != NULL)
-	{
-		tmp = node;
-		node = node->next;
-		tmp->next = NULL;
-		tmp->name = NULL;
-		free(tmp);
-	}
-}
+/*!
+ * @brief -
+ * @param filename
+ * @return UNKNOWN_TYPE on failure
+*/
+file_type get_file_type(const char* filename);
 
-operand_list_t* list_append(operand_list_t** list, const char* operand)
-{
-	if (list == NULL){
-		return NULL;
-	}
-
-	operand_list_t* newNode;
-	newNode = malloc(sizeof(operand_list_t));
-
-	if (newNode == NULL) {
-		return NULL;
-	}
-
-	newNode->next = NULL;
-	newNode->name = operand;
-
-	if (*list == NULL)
-	{
-		*list = newNode;
-	}
-	else
-	{
-		operand_list_t* node = *list;
-		while (node->next != NULL) {
-			node = node->next;
-		}
-		node->next = newNode;
-	}
-	return newNode;
-}
+/*!
+ * @brief Gets all files in directory and sets their type
+ * @param dir -
+ * @return -
+*/
+operand_list_t* get_files_in_directory(const char* dir);

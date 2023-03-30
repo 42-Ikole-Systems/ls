@@ -15,22 +15,69 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <libkm.h>
+#include "../parsing/parse.h"
+#include <stdlib.h>
 
-#include "parse.h"
-#include <sys/stat.h>
-#include <stdio.h>
-
-int parse_operand(const char* operand, operand_list_t** operand_list)
+void clear_list(operand_list_t* node)
 {
-	struct stat statBuffer;
-	if (lstat(operand, &statBuffer) == -1)
-	{
-		perror(operand);
-        return LS_PARSE_ERROR;
-    }
+	operand_list_t* tmp;
 
-	operand_list_t* newNode = list_append(operand_list, operand);
-	newNode->type = UNKNOWN_TYPE;
-	return 0;
+	while (node != NULL)
+	{
+		tmp = node;
+		node = node->next;
+		tmp->next = NULL;
+		tmp->name = NULL;
+		free(tmp);
+	}
+}
+
+operand_list_t* list_append(operand_list_t** list, const char* operand)
+{
+	if (list == NULL){
+		return NULL;
+	}
+
+	operand_list_t* newNode;
+	newNode = malloc(sizeof(operand_list_t));
+
+	if (newNode == NULL) {
+		return NULL;
+	}
+
+	newNode->next = NULL;
+	newNode->name = operand;
+
+	if (*list == NULL)
+	{
+		*list = newNode;
+	}
+	else
+	{
+		operand_list_t* node = *list;
+		while (node->next != NULL) {
+			node = node->next;
+		}
+		node->next = newNode;
+	}
+	return newNode;
+}
+
+operand_list_t* list_append_node(operand_list_t** list, operand_list_t* newNode)
+{
+	newNode->next = NULL;
+	if (*list == NULL)
+	{
+		*list = newNode;
+	}
+	else
+	{
+		operand_list_t* node = *list;
+		while (node->next) {
+			node = node->next;
+		}
+		node->next = newNode;
+	}
+	
+	return newNode;
 }
