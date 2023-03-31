@@ -22,17 +22,8 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-file_type	get_file_type(const char* filename)
+file_type get_file_type(struct stat statBuf)
 {
-	struct stat statBuf;
-
-	 // Get file status
-	if (stat(filename, &statBuf) == -1)
-	{
-		perror("stat");
-		return UNKNOWN_TYPE;
-	}
-
 	// Check the file type
 	if (S_ISREG(statBuf.st_mode)) {
 		return regular_file_type;
@@ -56,18 +47,38 @@ file_type	get_file_type(const char* filename)
 		return unix_socket_type;
 	}
 	else {
-		km_dprintf(stderr, "Unable to determine filetype for: `%s`", filename);
+		km_dprintf(STDERR_FILENO, "Unable to determine filetype");
 		return UNKNOWN_TYPE;
 	}
 }
 
-operand_list_t* get_files_in_directory(const char* dir)
+bool set_stat_info(operand_list_t* operand)
+{
+	struct stat statBuf;
+
+	 // Get file status
+	if (stat(operand->name, &statBuf) == -1)
+	{
+		perror("stat");
+		return false;
+	}
+	operand->statInfo = statBuf;
+
+	operand->type = get_file_type(statBuf);
+	if (operand->type == UNKNOWN_TYPE)
+	{
+		return false;
+	}
+	return true;
+}
+
+operand_list_t* get_files_in_directory(const char* dirName)
 {
 	operand_list_t* directory_files = NULL;
     DIR*			dir;
     struct dirent*	entry;
 
-    dir = opendir(dir);
+    dir = opendir(dirName);
     if (dir == NULL)
 	{
         perror("opendir");
@@ -85,9 +96,7 @@ operand_list_t* get_files_in_directory(const char* dir)
 			error = true;
 			break ;
 		}
-		currentOperand->type = get_file_type(filename);
-		if (currentOperand->type == UNKNOWN_TYPE)
-		{
+		if (set_stat_info(currentOperand) == false) {
 			error = true;
 			break ;
 		}

@@ -15,22 +15,34 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <libkm.h>
+#pragma once
 
-#include "parse.h"
-#include <sys/stat.h>
-#include <stdio.h>
+#include "ft_ls.h"
 
-int parse_operand(const char* operand, operand_list_t** operand_list)
-{
-	struct stat statBuffer;
-	if (lstat(operand, &statBuffer) == -1)
-	{
-		perror(operand);
-        return LS_PARSE_ERROR;
-    }
+/*!
+ * @brief sorts list based on what flags are set
+*/
+void sort(operand_list_t** list, ls_flags flags);
 
-	operand_list_t* newNode = list_append(operand_list, operand);
-	newNode->type = UNKNOWN_TYPE;
-	return 0;
-}
+/*!
+ * @brief prototype for compare function
+ * @return true if need to be swapped, false otherwise
+*/
+typedef bool(*compare_function_t)(operand_list_t* left, operand_list_t* right);
+
+/*!
+ * @brief get the function used for comparing
+*/
+compare_function_t get_compare_function(ls_flags flags);
+
+
+///////////////////////
+// Compare functions //
+///////////////////////
+
+
+bool lexicographical_compare(operand_list_t* left, operand_list_t* right);
+bool reverse_lexicographical_compare(operand_list_t* left, operand_list_t* right);
+bool time_modified_compare(operand_list_t* left, operand_list_t* right);
+bool time_access_compare(operand_list_t* left, operand_list_t* right);
+bool no_sort(operand_list_t* left, operand_list_t* right);

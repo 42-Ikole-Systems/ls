@@ -17,6 +17,8 @@
 
 #include "ft_ls.h"
 #include "file.h"
+#include "sort.h"
+#include "libkm.h"
 
 #include <unistd.h>
 
@@ -24,8 +26,7 @@ static int set_operand_types(operand_list_t* operands)
 {
 	for (operand_list_t* node = operands; node != NULL; node = node->next)
 	{
-		node->type = get_file_type(node->name);
-		if (node->type == UNKNOWN_TYPE)
+		if (set_stat_info(node) == false)
 		{
 			clear_list(operands);
 			return LS_ERROR;
@@ -56,50 +57,29 @@ static void split_operands(operand_list_t** operands, operand_list_t** files, op
 	*operands = NULL;
 }
 
-static void lexicographical_sort(operand_list_t** list)
+static void print_operands(const operand_list_t* files, const operand_list_t* directories)
 {
-	// Use bubble sort to sort the list in ascending order
-    bool swapped;
-    operand_list_t* curr = NULL;
-    operand_list_t* prev = NULL;
-    do {
-        swapped = false;
-        curr = *list;
-        while (curr->next != prev) 
-		{
-            if (km_strcmp(curr->name, curr->next->name) > 0)
-			{
-				operand_list_t tmp = *(curr->next);
-				if (prev == NULL)
-				{
-					*list = curr->next;
-					curr->next->next = curr;
-					curr->next = tmp.next;
-				}
-				else
-				{
-					prev->next = curr->next;
-					curr->next->next = curr;
-					curr->next = tmp.next;
-				}
-                swapped = true;
-            }
-            curr = curr->next;
-        }
-        prev = curr;
-    } while (swapped);
+	if (files) {
+		km_printf("directory: %s\n", files->name);
+	}
+	if (directories) {
+		km_printf("directory: %s\n", directories->name);
+	}
 }
 
-int list_operands(operand_list_t* operands)
+int list_operands(operand_list_t* operands, ls_flags flags)
 {
 	if (set_operand_types(operands) == LS_ERROR) {
 		return LS_ERROR;
 	}
 
-	operand_list_t* files;
-	operand_list_t* directories;
-	lexicographical_sort(&operands);
+	operand_list_t* files = NULL;
+	operand_list_t* directories = NULL;
+	sort(&operands, flags);
 	split_operands(&operands, &files, &directories);
 
-
+	print_operands(files, directories);
+	clear_list(files);
+	clear_list(directories);
+	return 0;
 }

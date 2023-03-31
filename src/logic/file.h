@@ -24,7 +24,7 @@
  * @param filename
  * @return UNKNOWN_TYPE on failure
 */
-file_type get_file_type(const char* filename);
+file_type get_file_type(struct stat statBuf);
 
 /*!
  * @brief Gets all files in directory and sets their type
@@ -32,3 +32,10 @@ file_type get_file_type(const char* filename);
  * @return -
 */
 operand_list_t* get_files_in_directory(const char* dir);
+
+/*!
+ * @brief sets statInfo in operand and sets fileType
+ * @param operand -
+ * @return true on success, false on failure
+*/
+bool set_stat_info(operand_list_t* operand);

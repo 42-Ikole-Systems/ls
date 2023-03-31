@@ -35,5 +35,5 @@ int main(int argc, const char** argv)
 		}
 	}
 
-	return list_operands(operand_list);
+	return list_operands(operand_list, flags);
 }

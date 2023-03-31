@@ -17,7 +17,8 @@
 
 #pragma once
 
-#include "stdbool.h"
+#include <stdbool.h>
+#include <sys/stat.h>
 
 ///////////
 // Types //
@@ -25,16 +26,16 @@
 
 	typedef enum e_ls_flags
 	{
-		unknown = 0x00,
-		a = 0x01,  // 0000 0000 0000 0000 0000 0001 (include hidden directories)
-		l = 0x02,  // 0000 0000 0000 0000 0000 0010 (long format)
-		R = 0x04,  // 0000 0000 0000 0000 0000 0100 (Recusively list subdirectories)
-		r = 0x08,  // 0000 0000 0000 0000 0000 1000 (reverse lexicographical sort)
-		t = 0x10,  // 0000 0000 0000 0000 0001 0000 (sort by time)
-		u = 0x20,  // 0000 0000 0000 0000 0010 0000 (Use time of last access, instead of last modification of the file for sorting).
-		f = 0x41,  // 0000 0000 0000 0000 0100 0001 (Output is not sorted.  This option turns on the -a option.)
-		g = 0x80,  // 0000 0000 0000 0000 1000 0000 (display the group name in the long (-l) format output (the owner name is suppressed).)
-		d = 0x100, // 0000 0000 0000 0001 0000 0000 (Directories are listed as plain files (not searched recursively).)
+		flag_unknown = 0x00,
+		flag_hidden_directories			= 0x01,  // [a] 0000 0000 0000 0000 0000 0001 (include hidden directories)
+		flag_long_format				= 0x02,  // [l] 0000 0000 0000 0000 0000 0010 (long format)
+		flag_recursive					= 0x04,  // [R] 0000 0000 0000 0000 0000 0100 (Recusively list subdirectories)
+		flag_reverse_lexi_sort			= 0x08,  // [r] 0000 0000 0000 0000 0000 1000 (reverse lexicographical sort)
+		flag_modified_time_sort			= 0x10,  // [t] 0000 0000 0000 0000 0001 0000 (sort by time modified)
+		flag_access_time_sort			= 0x20,  // [u] 0000 0000 0000 0000 0010 0000 (Use time of last access, instead of last modification of the file for sorting).
+		flag_no_sort					= 0x41,  // [f] 0000 0000 0000 0000 0100 0001 (Output is not sorted.  This option turns on the -a option.)
+		flag_display_groupname			= 0x80,  // [g] 0000 0000 0000 0000 1000 0000 (display the group name in the long (-l) format output (the owner name is suppressed).)
+		flag_display_directory_as_file	= 0x100, // [d] 0000 0000 0000 0001 0000 0000 (Directories are listed as plain files (not searched recursively).)
 	} ls_flags;
 
 	#define ALLOWED_LS_FLAGS "alRrtufgd"
@@ -61,6 +62,7 @@
 	{
 		const char*				name;
 		file_type				type;
+		struct stat				statInfo;
 		struct operand_list_s*	next;
 	} operand_list_t;
 
@@ -115,3 +117,9 @@
 	 * @return newNode
 	*/
 	operand_list_t* list_append_node(operand_list_t** list, operand_list_t* newNode);
+
+///////////
+// Logic //
+///////////
+
+	int list_operands(operand_list_t* operands, ls_flags flags);
