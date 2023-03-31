@@ -3,8 +3,6 @@ SETTINGS_MK = 1
 
 NAME	= ft_ls
 
-LIBS	= libkm/libkm.a
-
 CFLAGS	= -Wall -Wextra -Werror
 IFLAGS	= $(addprefix -I, $(IDIR))
 

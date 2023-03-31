@@ -10,7 +10,7 @@ all:
 # Compilation
 $(NAME): $(LIBS) $(OBJ)
 	@echo "$(COLOR_GREEN)Creating ls executable...$(COLOR_RESET)"
-	@$(CXX) -o $@ $(OBJ) $(LIBS) $(LFLAGS)
+	$(CXX) -o $@ $(OBJ) $(LIBS) $(LFLAGS)
 
 $(OBJ): $(ODIR)/%.o: $(SDIR)/%.c
 	@mkdir -p $(@D)
@@ -39,9 +39,10 @@ re: fclean
 	@$(MAKE) re -C libkm
 	@$(MAKE) all
 
-# Debugging
+# phony
 .PHONY: debug fsanitize
 
+# Debugging
 debug:
 	@$(MAKE) debug -C libkm
 	@$(MAKE) re DEBUG=1
