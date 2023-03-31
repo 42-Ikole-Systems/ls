@@ -10,7 +10,7 @@ all:
 # Compilation
 $(NAME): $(LIBS) $(OBJ)
 	@echo "$(COLOR_GREEN)Creating ls executable...$(COLOR_RESET)"
-	$(CXX) -o $@ $(OBJ) $(LIBS) $(LFLAGS)
+	@$(CXX) -o $@ $(OBJ) $(LIBS) $(LFLAGS) $(CFLAGS)
 
 $(OBJ): $(ODIR)/%.o: $(SDIR)/%.c
 	@mkdir -p $(@D)
@@ -24,12 +24,14 @@ $(LIBS):
 .PHONY: clean fclean re
 
 clean:
+	@echo "$(COLOR_YELLOW)clean $(NAME)... $(COLOR_RESET)"
 	@$(MAKE) clean -C libkm
 	@printf "$(COLOR_RED)"
 	$(RM) -r $(ODIR)
 	@printf "$(COLOR_RESET)"
 
 fclean: clean
+	@echo "$(COLOR_YELLOW)force clean $(NAME)... $(COLOR_RESET)"
 	@$(MAKE) fclean -C libkm
 	@printf "$(COLOR_RED)"
 	$(RM) $(NAME)
@@ -43,14 +45,17 @@ re: fclean
 .PHONY: debug fsanitize
 
 # Debugging
-debug:
+debug: fclean
+	@echo "$(COLOR_YELLOW)Building $(NAME) debug... $(COLOR_RESET)"
 	@$(MAKE) debug -C libkm
-	@$(MAKE) re DEBUG=1
+	@$(MAKE) DEBUG=1
 
-leaks:
+leaks: fclean
+	@echo "$(COLOR_YELLOW)Building $(NAME) leaks... $(COLOR_RESET)"
 	@$(MAKE) leaks -C libkm
-	@$(MAKE) re LEAKS=1
+	@$(MAKE) LEAKS=1
 
-fsanitize:
+fsanitize: fclean
+	@echo "$(COLOR_YELLOW)Building $(NAME) fsanitize... $(COLOR_RESET)"
 	@$(MAKE) fsanitize -C libkm
-	@$(MAKE) re FSANITIZE=1
+	@$(MAKE) FSANITIZE=1
