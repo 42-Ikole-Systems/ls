@@ -21,6 +21,11 @@
 #include "libkm.h"
 
 #include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
+#include <time.h>
+#include <assert.h>
+#include <stdlib.h>
 
 static int set_operand_types(operand_list_t* operands)
 {
@@ -57,13 +62,124 @@ static void split_operands(operand_list_t** operands, operand_list_t** files, op
 	*operands = NULL;
 }
 
-static void print_operands(const operand_list_t* files, const operand_list_t* directories)
+static char get_entry_type(const operand_list_t* node)
 {
-	if (files) {
-		km_printf("directory: %s\n", files->name);
+	switch (node->type)
+	{
+		case regular_file_type: return '-';
+		case directory_type: return 'd';
+		case symlink_type: return 'l';
+		case block_device_type: return 'b';
+		case character_device_type: return 'c';
+		case fifo_type: return 'p';
+		case unix_socket_type: return 's';
+		default:
+			assert(node->type == UNKNOWN_TYPE);
+			return '?';
 	}
-	if (directories) {
+}
+
+/*!
+ * @NOTE: DO NOT FREE returnvalue (static memory)
+*/
+static const char* get_file_mode(const operand_list_t* node)
+{
+	static char permissionString[10];
+	int filemode = node->statInfo.st_mode;
+
+	// owner permisison
+	permissionString[0] = (filemode & S_IRUSR) ? 'r' : '-';
+	permissionString[1] = (filemode & S_IWUSR) ? 'w' : '-';
+	permissionString[2] = (filemode & S_IXUSR) ? 'x' : '-';
+	
+	// group permission
+	permissionString[3] = (filemode & S_IRGRP) ? 'r' : '-';
+	permissionString[4] = (filemode & S_IWGRP) ? 'w' : '-';
+	permissionString[5] = (filemode & S_IXGRP) ? 'x' : '-';
+	
+	// others permisison
+	permissionString[6] = (filemode & S_IROTH) ? 'r' : '-';
+	permissionString[7] = (filemode & S_IWOTH) ? 'w' : '-';
+	permissionString[8] = (filemode & S_IXOTH) ? 'x' : '-';
+
+	permissionString[9] = '\0';
+	return permissionString;
+}
+
+static size_t get_hard_links(const operand_list_t* node)
+{
+	return (size_t)node->statInfo.st_nlink;
+}
+
+/*!
+ * @NOTE: DO NOT FREE returnvalue (static memory)
+*/
+static const char* get_owner_name(const operand_list_t* node)
+{
+	struct passwd* pw = getpwuid(node->statInfo.st_uid);
+	if (pw == NULL) {
+		return NULL;
+	}
+	return pw->pw_name;
+}
+
+/*!
+ * @NOTE: DO NOT FREE returnvalue (static memory)
+*/
+static const char* get_group_name(const operand_list_t* node)
+{
+	struct group* gr = getgrgid(node->statInfo.st_uid);
+	if (gr == NULL) {
+		return NULL;
+	}
+	return gr->gr_name;
+}
+
+static size_t get_filesize(const operand_list_t* node)
+{
+	return (size_t)(node->statInfo.st_size);
+}
+
+static char* get_last_modified_time(const operand_list_t* node)
+{
+	return (ctime(&node->statInfo.st_mtime));
+}
+
+static void print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags)
+{
+	// files
+	for (const operand_list_t* node = files; node != NULL; node = node->next)
+	{
+		if (flags & flag_long_format)
+		{
+			const char entryType = get_entry_type(node); // entry type
+			const char* fileMode = get_file_mode(node); // File mode (permissions)
+			const size_t hardLinks = get_hard_links(node); // Number of hard links
+			const char* ownerName = get_owner_name(node); // Owner name (or ID)
+			const char* groupName = get_group_name(node); // Group name (or ID)
+			const size_t filesize = get_filesize(node); // File size (in bytes)
+			const char* lastModifiedTime = get_last_modified_time(node); // Date and time of last modification
+			const char* filename = node->name; // File name
+
+			// if (ownerName == NULL || groupName == NULL || lastModifiedTime == NULL)
+			// {
+			// 	return LS_ERROR;
+			// }
+
+			km_printf("file: %c%s\t%llu\t%s\t%s\t%s\t%llu\t%llu\t%s\n", entryType, fileMode, hardLinks, ownerName, groupName, filesize, lastModifiedTime, filename);
+			// free((void*)lastModifiedTime);
+		}
+		else
+		{
+			km_printf("%s\n", node->name);
+		}
+	}
+	// directory
+	for (const operand_list_t* node = directories; node != NULL; node = node->next)
+	{
 		km_printf("directory: %s\n", directories->name);
+		// get everything in directory,
+		// if recurse is on go back to list operands with subdirectories..
 	}
 }
 
@@ -78,7 +194,7 @@ int list_operands(operand_list_t* operands, ls_flags flags)
 	sort(&operands, flags);
 	split_operands(&operands, &files, &directories);
 
-	print_operands(files, directories);
+	print_operands(files, directories, flags);
 	clear_list(files);
 	clear_list(directories);
 	return 0;

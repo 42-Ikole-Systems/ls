@@ -34,7 +34,7 @@
 		flag_modified_time_sort			= 0x10,  // [t] 0000 0000 0000 0000 0001 0000 (sort by time modified)
 		flag_access_time_sort			= 0x20,  // [u] 0000 0000 0000 0000 0010 0000 (Use time of last access, instead of last modification of the file for sorting).
 		flag_no_sort					= 0x41,  // [f] 0000 0000 0000 0000 0100 0001 (Output is not sorted.  This option turns on the -a option.)
-		flag_display_groupname			= 0x80,  // [g] 0000 0000 0000 0000 1000 0000 (display the group name in the long (-l) format output (the owner name is suppressed).)
+		flag_display_groupname			= 0x82,  // [g] 0000 0000 0000 0000 1000 0010 (display the group name in the long (-l) format output (the owner name is suppressed).)
 		flag_display_directory_as_file	= 0x100, // [d] 0000 0000 0000 0001 0000 0000 (Directories are listed as plain files (not searched recursively).)
 	} ls_flags;
 

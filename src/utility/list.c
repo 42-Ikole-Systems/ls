@@ -29,7 +29,7 @@ void clear_list(operand_list_t* node)
 		tmp = node;
 		node = node->next;
 		tmp->next = NULL;
-		free(tmp->name);
+		free((void*)tmp->name);
 		tmp->name = NULL;
 		free(tmp);
 	}

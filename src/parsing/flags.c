@@ -53,7 +53,7 @@ int parse_flags(const char* token, ls_flags* flags)
 			km_printf("ls: illegal option -- %c\n", token[i]);
 			return LS_PARSE_ERROR;
 		}
-		*flags &= tmp;
+		*flags |= tmp;
 	}
 	return flags_found;
 }
