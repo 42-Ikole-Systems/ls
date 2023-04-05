@@ -16,6 +16,8 @@
 /* ************************************************************************** */
 
 #include "../parsing/parse.h"
+#include "libkm.h"
+
 #include <stdlib.h>
 
 void clear_list(operand_list_t* node)
@@ -27,6 +29,7 @@ void clear_list(operand_list_t* node)
 		tmp = node;
 		node = node->next;
 		tmp->next = NULL;
+		free(tmp->name);
 		tmp->name = NULL;
 		free(tmp);
 	}
@@ -46,7 +49,11 @@ operand_list_t* list_append(operand_list_t** list, const char* operand)
 	}
 
 	newNode->next = NULL;
-	newNode->name = operand;
+	newNode->name = km_strdup(operand);
+	if (newNode->name == NULL) {
+		free(newNode);
+		return NULL;
+	}
 
 	if (*list == NULL)
 	{
