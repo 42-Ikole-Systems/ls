@@ -128,7 +128,7 @@ static const char* get_owner_name(const operand_list_t* node)
 */
 static const char* get_group_name(const operand_list_t* node)
 {
-	struct group* gr = getgrgid(node->statInfo.st_uid);
+	struct group* gr = getgrgid(node->statInfo.st_gid);
 	if (gr == NULL) {
 		return NULL;
 	}
@@ -165,8 +165,7 @@ static void print_operands(const operand_list_t* files, const operand_list_t* di
 			// {
 			// 	return LS_ERROR;
 			// }
-
-			km_printf("file: %c%s\t%llu\t%s\t%s\t%s\t%llu\t%llu\t%s\n", entryType, fileMode, hardLinks, ownerName, groupName, filesize, lastModifiedTime, filename);
+			km_printf("file: %c%s\t%llu\t%s\t%s\t%llu\t%s\t%s\n", entryType, fileMode, hardLinks, ownerName, groupName, filesize, lastModifiedTime, filename);
 			// free((void*)lastModifiedTime);
 		}
 		else
