@@ -27,11 +27,11 @@
 #include <assert.h>
 #include <stdlib.h>
 
-static int set_operand_types(operand_list_t* operands)
+static int set_operand_types(operand_list_t* operands, ls_flags flags)
 {
 	for (operand_list_t* node = operands; node != NULL; node = node->next)
 	{
-		if (set_stat_info(node) == false)
+		if (set_stat_info(node, flags) == false)
 		{
 			clear_list(operands);
 			return LS_ERROR;
@@ -140,9 +140,31 @@ static size_t get_filesize(const operand_list_t* node)
 	return (size_t)(node->statInfo.st_size);
 }
 
-static char* get_last_modified_time(const operand_list_t* node)
+static char* get_time(const operand_list_t* node)
 {
-	return (ctime(&node->statInfo.st_mtime));
+	char* modifiedTimeString = ctime(&node->time); // DO NOT FREE
+	if (modifiedTimeString == NULL) {
+		return NULL;
+	}
+
+	const char* dayName = km_strtok(modifiedTimeString, " ");
+	const char* month = km_strtok(NULL, " ");
+	const char* dayNumber = km_strtok(NULL, " ");
+	const char* timeString = km_strtok(NULL, " ");
+	const char* year = km_strtok(NULL, "\n");
+	(void)dayName;
+
+	const time_t currentTime = time(NULL);
+	const time_t elevenMonths = 11 * 30 * 24 * 60 * 60; // ~ not very precise but good enough
+	const char* yearTime = (node->time < currentTime - elevenMonths) ? year : timeString;
+
+	char* result = NULL;
+	if (km_sprintf(&result , "%.2s %s %.5s", dayNumber, month, yearTime) < 0) {
+		free(result);
+		return NULL;
+	}
+
+	return (result);
 }
 
 static void print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags)
@@ -158,14 +180,14 @@ static void print_operands(const operand_list_t* files, const operand_list_t* di
 			const char* ownerName = get_owner_name(node); // Owner name (or ID)
 			const char* groupName = get_group_name(node); // Group name (or ID)
 			const size_t filesize = get_filesize(node); // File size (in bytes)
-			const char* lastModifiedTime = get_last_modified_time(node); // Date and time of last modification
+			const char* lastModifiedTime = get_time(node); // Date and time of last modification
 			const char* filename = node->name; // File name
 
 			// if (ownerName == NULL || groupName == NULL || lastModifiedTime == NULL)
 			// {
 			// 	return LS_ERROR;
 			// }
-			km_printf("file: %c%s\t%llu\t%s\t%s\t%llu\t%s\t%s\n", entryType, fileMode, hardLinks, ownerName, groupName, filesize, lastModifiedTime, filename);
+			km_printf("%c%s\t%llu\t%s\t%s\t%llu\t%s\t%s\n", entryType, fileMode, hardLinks, ownerName, groupName, filesize, lastModifiedTime, filename);
 			// free((void*)lastModifiedTime);
 		}
 		else
@@ -184,7 +206,7 @@ static void print_operands(const operand_list_t* files, const operand_list_t* di
 
 int list_operands(operand_list_t* operands, ls_flags flags)
 {
-	if (set_operand_types(operands) == LS_ERROR) {
+	if (set_operand_types(operands, flags) == LS_ERROR) {
 		return LS_ERROR;
 	}
 
