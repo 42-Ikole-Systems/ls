@@ -191,10 +191,63 @@ static char* get_time(const operand_list_t* node)
 	return (result);
 }
 
+static size_t get_most_links(const operand_list_t* files, const operand_list_t* directories)
+{
+	off_t links = 0;
+	for (const operand_list_t* node = files; node != NULL; node = node->next)
+	{
+		if (node->statInfo.st_nlink > links) {
+			links = node->statInfo.st_nlink;
+		}
+	}
+	for (const operand_list_t* node = directories; node != NULL; node = node->next)
+	{
+		if (node->statInfo.st_nlink > links) {
+			links = node->statInfo.st_nlink;
+		}
+	}
+	return (size_t)links;
+}
+
+static size_t get_largest_file_size(const operand_list_t* files, const operand_list_t* directories)
+{
+	off_t largestFileSize = 0;
+	for (const operand_list_t* node = files; node != NULL; node = node->next)
+	{
+		if (node->statInfo.st_size > largestFileSize) {
+			largestFileSize = node->statInfo.st_size;
+		}
+	}
+	for (const operand_list_t* node = directories; node != NULL; node = node->next)
+	{
+		if (node->statInfo.st_size > largestFileSize) {
+			largestFileSize = node->statInfo.st_size;
+		}
+	}
+	return (size_t)largestFileSize;
+}
+
+static int get_amount_of_characters(size_t n)
+{
+	if (n == 0) {
+		return 1;
+	}
+
+	int amountOfCharacers = 0;
+	for (; n != 0; n /= 10) {
+		amountOfCharacers++;
+	}
+	return amountOfCharacers;
+}
+
 static int print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags)
 {
+	int status = LS_SUCCESS;
+
+	const int hardlinkPrecision = get_amount_of_characters(get_most_links(files, directories)) + 1;
+	const int filesizePrecision = get_amount_of_characters(get_largest_file_size(files, directories)) + 1;
 	// files
-	for (const operand_list_t* node = files; node != NULL; node = node->next)
+	for (const operand_list_t* node = files; status == LS_SUCCESS && node != NULL; node = node->next)
 	{
 		if (flags & flag_long_format)
 		{
@@ -209,26 +262,32 @@ static int print_operands(const operand_list_t* files, const operand_list_t* dir
 
 			if (ownerName == NULL || groupName == NULL || fileTime == NULL)
 			{
-				free((void*)fileTime);
-				return LS_ERROR;
+				status = LS_ERROR;
 			}
 
-			km_printf("%c%s\t%llu\t%s\t%s\t%llu\t%s\t%s\n", entryType, fileMode, hardLinks, ownerName, groupName, filesize, fileTime, filename);
+			if (status == LS_SUCCESS
+				&& km_printf("%c%s % .*llu %s %s % .*llu %s %s\n", entryType, fileMode, hardlinkPrecision, hardLinks, ownerName, groupName, filesizePrecision, filesize, fileTime, filename) < 0)
+			{
+				status = LS_ERROR;
+			}
+
 			free((void*)fileTime);
 		}
 		else
 		{
-			km_printf("%s ", node->name);
+			if (km_printf("%s\t", node->name) < 0) {
+				status = LS_ERROR;
+			}
 		}
 	}
 	// directory
-	for (const operand_list_t* node = directories; node != NULL; node = node->next)
+	for (const operand_list_t* node = directories; status == LS_SUCCESS && node != NULL; node = node->next)
 	{
 		km_printf("directory: %s\n", directories->name);
 		// get everything in directory,
 		// if recurse is on go back to list operands with subdirectories..
 	}
-	return LS_SUCCESS;
+	return status;
 }
 
 int list_operands(operand_list_t* operands, ls_flags flags)
