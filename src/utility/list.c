@@ -67,6 +67,7 @@ operand_list_t* list_append(operand_list_t** list, const char* operand)
 		}
 		node->next = newNode;
 	}
+	newNode->time = 0;
 	return newNode;
 }
 

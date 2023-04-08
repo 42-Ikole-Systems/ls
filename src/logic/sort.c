@@ -67,11 +67,8 @@ compare_function_t get_compare_function(ls_flags flags)
 	if (flags & flag_reverse_lexi_sort) {
 		return reverse_lexicographical_compare;
 	}
-	if (flags & flag_modified_time_sort) {
-		return time_modified_compare;
-	}
-	if (flags & flag_access_time_sort) {
-		return time_access_compare;
+	if (flags & flag_time_sort) {
+		return time_compare;
 	}
 	return lexicographical_compare;
 }
@@ -87,14 +84,9 @@ bool reverse_lexicographical_compare(operand_list_t* left, operand_list_t* right
 	return lexicographical_compare(right, left);
 }
 
-bool time_modified_compare(operand_list_t* left, operand_list_t* right)
+bool time_compare(operand_list_t* left, operand_list_t* right)
 {
-	return (left->statInfo.st_mtime > right->statInfo.st_mtime);
-}
-
-bool time_access_compare(operand_list_t* left, operand_list_t* right)
-{
-	return (left->statInfo.st_atime > right->statInfo.st_atime);
+	return (left->time > right->time);
 }
 
 bool no_sort(operand_list_t* left, operand_list_t* right)

@@ -43,6 +43,5 @@ compare_function_t get_compare_function(ls_flags flags);
 
 bool lexicographical_compare(operand_list_t* left, operand_list_t* right);
 bool reverse_lexicographical_compare(operand_list_t* left, operand_list_t* right);
-bool time_modified_compare(operand_list_t* left, operand_list_t* right);
-bool time_access_compare(operand_list_t* left, operand_list_t* right);
+bool time_compare(operand_list_t* left, operand_list_t* right);
 bool no_sort(operand_list_t* left, operand_list_t* right);

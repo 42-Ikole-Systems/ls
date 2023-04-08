@@ -31,8 +31,8 @@
 		flag_long_format				= 0x02,  // [l] 0000 0000 0000 0000 0000 0010 (long format)
 		flag_recursive					= 0x04,  // [R] 0000 0000 0000 0000 0000 0100 (Recusively list subdirectories)
 		flag_reverse_lexi_sort			= 0x08,  // [r] 0000 0000 0000 0000 0000 1000 (reverse lexicographical sort)
-		flag_modified_time_sort			= 0x10,  // [t] 0000 0000 0000 0000 0001 0000 (sort by time modified)
-		flag_access_time_sort			= 0x20,  // [u] 0000 0000 0000 0000 0010 0000 (Use time of last access, instead of last modification of the file for sorting).
+		flag_time_sort					= 0x10,  // [t] 0000 0000 0000 0000 0001 0000 (sort by time modified)
+		flag_use_access_time			= 0x20,  // [u] 0000 0000 0000 0000 0010 0000 (Use time of last access, instead of last modification of the file for sorting and in long format).
 		flag_no_sort					= 0x41,  // [f] 0000 0000 0000 0000 0100 0001 (Output is not sorted.  This option turns on the -a option.)
 		flag_display_groupname			= 0x82,  // [g] 0000 0000 0000 0000 1000 0010 (display the group name in the long (-l) format output (the owner name is suppressed).)
 		flag_display_directory_as_file	= 0x100, // [d] 0000 0000 0000 0001 0000 0000 (Directories are listed as plain files (not searched recursively).)
@@ -63,6 +63,7 @@
 		const char*				name;
 		file_type				type;
 		struct stat				statInfo;
+		time_t					time;
 		struct operand_list_s*	next;
 	} operand_list_t;
 

@@ -52,7 +52,7 @@ file_type get_file_type(struct stat statBuf)
 	}
 }
 
-bool set_stat_info(operand_list_t* operand)
+bool set_stat_info(operand_list_t* operand, ls_flags flags)
 {
 	struct stat statBuf;
 
@@ -69,10 +69,12 @@ bool set_stat_info(operand_list_t* operand)
 	{
 		return false;
 	}
+
+	operand->time = (flags & flag_use_access_time) ? operand->statInfo.st_atime : operand->statInfo.st_mtime;
 	return true;
 }
 
-operand_list_t* get_files_in_directory(const char* dirName)
+operand_list_t* get_files_in_directory(const char* dirName, ls_flags flags)
 {
 	operand_list_t* directory_files = NULL;
     DIR*			dir;
@@ -96,7 +98,7 @@ operand_list_t* get_files_in_directory(const char* dirName)
 			error = true;
 			break ;
 		}
-		if (set_stat_info(currentOperand) == false) {
+		if (set_stat_info(currentOperand, flags) == false) {
 			error = true;
 			break ;
 		}
