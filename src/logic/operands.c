@@ -90,17 +90,41 @@ static const char* get_file_mode(const operand_list_t* node)
 	// owner permisison
 	permissionString[0] = (filemode & S_IRUSR) ? 'r' : '-';
 	permissionString[1] = (filemode & S_IWUSR) ? 'w' : '-';
-	permissionString[2] = (filemode & S_IXUSR) ? 'x' : '-';
+	if (filemode & S_IXUSR && filemode & S_ISUID) {
+		permissionString[2] = 's';
+	} else if (filemode & S_IXUSR) {
+		permissionString[2] = 'x';
+	} else if (filemode & S_ISUID) {
+		permissionString[2] = 'S';
+	} else {
+		permissionString[2] = '-';
+	}
 	
 	// group permission
 	permissionString[3] = (filemode & S_IRGRP) ? 'r' : '-';
 	permissionString[4] = (filemode & S_IWGRP) ? 'w' : '-';
-	permissionString[5] = (filemode & S_IXGRP) ? 'x' : '-';
+	if (filemode & S_IXGRP && filemode & S_ISGID) {
+		permissionString[5] = 's';
+	} else if (filemode & S_IXGRP) {
+		permissionString[5] = 'x';
+	} else if (filemode & S_ISGID) {
+		permissionString[5] = 'S';
+	} else {
+		permissionString[5] = '-';
+	}
 	
 	// others permisison
 	permissionString[6] = (filemode & S_IROTH) ? 'r' : '-';
 	permissionString[7] = (filemode & S_IWOTH) ? 'w' : '-';
-	permissionString[8] = (filemode & S_IXOTH) ? 'x' : '-';
+	if (filemode & S_IXOTH && filemode & S_ISVTX) {
+		permissionString[8] = 't';
+	} else if (filemode & S_IXOTH) {
+		permissionString[8] = 'x';
+	} else if (filemode & S_ISVTX) {
+		permissionString[8] = 'T';
+	} else {
+		permissionString[8] = '-';
+	}
 
 	permissionString[9] = '\0';
 	return permissionString;
@@ -167,7 +191,7 @@ static char* get_time(const operand_list_t* node)
 	return (result);
 }
 
-static void print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags)
+static int print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags)
 {
 	// files
 	for (const operand_list_t* node = files; node != NULL; node = node->next)
@@ -180,19 +204,21 @@ static void print_operands(const operand_list_t* files, const operand_list_t* di
 			const char* ownerName = get_owner_name(node); // Owner name (or ID)
 			const char* groupName = get_group_name(node); // Group name (or ID)
 			const size_t filesize = get_filesize(node); // File size (in bytes)
-			const char* lastModifiedTime = get_time(node); // Date and time of last modification
+			const char* fileTime = get_time(node); // Date and time of last modification
 			const char* filename = node->name; // File name
 
-			// if (ownerName == NULL || groupName == NULL || lastModifiedTime == NULL)
-			// {
-			// 	return LS_ERROR;
-			// }
-			km_printf("%c%s\t%llu\t%s\t%s\t%llu\t%s\t%s\n", entryType, fileMode, hardLinks, ownerName, groupName, filesize, lastModifiedTime, filename);
-			// free((void*)lastModifiedTime);
+			if (ownerName == NULL || groupName == NULL || fileTime == NULL)
+			{
+				free((void*)fileTime);
+				return LS_ERROR;
+			}
+
+			km_printf("%c%s\t%llu\t%s\t%s\t%llu\t%s\t%s\n", entryType, fileMode, hardLinks, ownerName, groupName, filesize, fileTime, filename);
+			free((void*)fileTime);
 		}
 		else
 		{
-			km_printf("%s\n", node->name);
+			km_printf("%s ", node->name);
 		}
 	}
 	// directory
@@ -202,6 +228,7 @@ static void print_operands(const operand_list_t* files, const operand_list_t* di
 		// get everything in directory,
 		// if recurse is on go back to list operands with subdirectories..
 	}
+	return LS_SUCCESS;
 }
 
 int list_operands(operand_list_t* operands, ls_flags flags)

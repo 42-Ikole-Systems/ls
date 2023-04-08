@@ -67,8 +67,9 @@
 		struct operand_list_s*	next;
 	} operand_list_t;
 
-	#define LS_PARSE_ERROR -1
-	#define LS_ERROR -2
+	#define LS_SUCCESS 0
+	#define LS_PARSE_ERROR 1
+	#define LS_ERROR 2
 
 	#define LS_CURRENT_DIRECTORY "."
 
