@@ -266,7 +266,7 @@ static int print_operands(const operand_list_t* files, const operand_list_t* dir
 			}
 
 			if (status == LS_SUCCESS
-				&& km_printf("%c%s % .*llu %s %s % .*llu %s %s\n", entryType, fileMode, hardlinkPrecision, hardLinks, ownerName, groupName, filesizePrecision, filesize, fileTime, filename) < 0)
+				&& km_printf("%c%s %*llu %s %s %*llu %s %s\n", entryType, fileMode, hardlinkPrecision, hardLinks, ownerName, groupName, filesizePrecision, filesize, fileTime, filename) < 0)
 			{
 				status = LS_ERROR;
 			}
