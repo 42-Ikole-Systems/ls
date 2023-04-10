@@ -276,8 +276,8 @@ int print_operands(const operand_list_t* files, const operand_list_t* directorie
 	for (const operand_list_t* node = directories; status == LS_SUCCESS && node != NULL; node = node->next)
 	{
 		km_printf("directory: %s\n", node->name);
-		// get everything in directory,
 		operand_list_t* directoryEntries = get_files_in_directory(node->name, flags);
+		sort(&directoryEntries, flags);
 		status = print_operands(directoryEntries, NULL, flags);
 		if (status == LS_SUCCESS && flags & flag_recursive)
 		{
@@ -288,7 +288,6 @@ int print_operands(const operand_list_t* files, const operand_list_t* directorie
 			clear_list(subdirFiles);
 			clear_list(subdirDirs);
 		}
-		// if recurse is on go back to list operands with subdirectories..
 		clear_list(directoryEntries);
 	}
 	return status;
