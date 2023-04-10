@@ -15,42 +15,24 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#pragma once
+
 #include "ft_ls.h"
-#include "libkm.h"
-#include "logic/sort.h"
-#include "logic/operands.h"
 
-int main(int argc, const char** argv)
-{
-	ls_flags flags = 0x00;
-	operand_list_t* operands = NULL;
+/*!
+ * @brief sets all data for operands
+ * @param operands -
+ * @param flags -
+ * @return LS_SUCCESS on success, anything else on error
+*/
+int set_operand_data(operand_list_t* operands, ls_flags flags);
 
-	if (parse(argc, argv, &flags, &operands) == false) {
-		return LS_PARSE_ERROR;
-	}
-
-	if (operands == NULL)
-	{
-		// add current directory if no operand is given
-		if (list_append(&operands, ".") == NULL) {
-			return LS_ERROR;
-		}
-	}
-
-	int status = LS_SUCCESS;
-	status = set_operand_data(operands, flags);
-	if (status == LS_SUCCESS)
-	{
-		operand_list_t* files = NULL;
-		operand_list_t* directories = NULL;
-		sort(&operands, flags);
-		split_operands(&operands, &files, &directories);
-
-		status = print_operands(files, directories, flags);
-		clear_list(files);
-		clear_list(directories);
-		clear_list(operands);
-	}
-
-	return status;
-}
+/*!
+ * @brief splits operands into files and directories (by type)
+ * @param operands -
+ * @param files make sure it is empty and non NULL
+ * @param directories make sure it is empty and non NULL 
+ * 
+ * NOTE: operands will be NULL after calling this
+*/
+void split_operands(operand_list_t** operands, operand_list_t** files, operand_list_t** directories);

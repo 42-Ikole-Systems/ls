@@ -26,8 +26,8 @@ static ls_flags get_flag(char c)
 		case 'l': return flag_long_format;
 		case 'R': return flag_recursive;
 		case 'r': return flag_reverse_lexi_sort;
-		case 't': return flag_modified_time_sort;
-		case 'u': return flag_access_time_sort;
+		case 't': return flag_time_sort;
+		case 'u': return flag_use_access_time;
 		case 'f': return flag_no_sort;
 		case 'g': return flag_display_groupname;
 		case 'd': return flag_display_directory_as_file;

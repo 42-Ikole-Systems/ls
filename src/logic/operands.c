@@ -27,7 +27,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-static int set_operand_types(operand_list_t* operands, ls_flags flags)
+int set_operand_data(operand_list_t* operands, ls_flags flags)
 {
 	for (operand_list_t* node = operands; node != NULL; node = node->next)
 	{
@@ -37,18 +37,10 @@ static int set_operand_types(operand_list_t* operands, ls_flags flags)
 			return LS_ERROR;
 		}
 	}
-	return true;
+	return LS_SUCCESS;
 }
 
-/*!
- * @brief splits operands into files and directories (by type)
- * @param operands -
- * @param files make sure it is empty and non NULL
- * @param directories make sure it is empty and non NULL 
- * 
- * NOTE: operands will be NULL after calling this
-*/
-static void split_operands(operand_list_t** operands, operand_list_t** files, operand_list_t** directories)
+void split_operands(operand_list_t** operands, operand_list_t** files, operand_list_t** directories)
 {
 	for (operand_list_t* node = *operands; node != NULL; node = node->next)
 	{
@@ -240,7 +232,7 @@ static int get_amount_of_characters(size_t n)
 	return amountOfCharacers;
 }
 
-static int print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags)
+int print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags)
 {
 	int status = LS_SUCCESS;
 
@@ -266,7 +258,7 @@ static int print_operands(const operand_list_t* files, const operand_list_t* dir
 			}
 
 			if (status == LS_SUCCESS
-				&& km_printf("%c%s %*llu %s %s %*llu %s %s\n", entryType, fileMode, hardlinkPrecision, hardLinks, ownerName, groupName, filesizePrecision, filesize, fileTime, filename) < 0)
+				&& km_printf("%c%s %*llu %s %s %*llu %12s %s\n", entryType, fileMode, hardlinkPrecision, hardLinks, ownerName, groupName, filesizePrecision, filesize, fileTime, filename) < 0)
 			{
 				status = LS_ERROR;
 			}
@@ -283,26 +275,21 @@ static int print_operands(const operand_list_t* files, const operand_list_t* dir
 	// directory
 	for (const operand_list_t* node = directories; status == LS_SUCCESS && node != NULL; node = node->next)
 	{
-		km_printf("directory: %s\n", directories->name);
+		km_printf("directory: %s\n", node->name);
 		// get everything in directory,
+		operand_list_t* directoryEntries = get_files_in_directory(node->name, flags);
+		status = print_operands(directoryEntries, NULL, flags);
+		if (status == LS_SUCCESS && flags & flag_recursive)
+		{
+			operand_list_t* subdirFiles = NULL;
+			operand_list_t* subdirDirs = NULL;
+			split_operands(&directoryEntries, &subdirFiles, &subdirDirs);
+			status = print_operands(NULL, subdirDirs, flags);
+			clear_list(subdirFiles);
+			clear_list(subdirDirs);
+		}
 		// if recurse is on go back to list operands with subdirectories..
+		clear_list(directoryEntries);
 	}
 	return status;
-}
-
-int list_operands(operand_list_t* operands, ls_flags flags)
-{
-	if (set_operand_types(operands, flags) == LS_ERROR) {
-		return LS_ERROR;
-	}
-
-	operand_list_t* files = NULL;
-	operand_list_t* directories = NULL;
-	sort(&operands, flags);
-	split_operands(&operands, &files, &directories);
-
-	print_operands(files, directories, flags);
-	clear_list(files);
-	clear_list(directories);
-	return 0;
 }

@@ -124,4 +124,4 @@
 // Logic //
 ///////////
 
-	int list_operands(operand_list_t* operands, ls_flags flags);
+	int print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags);

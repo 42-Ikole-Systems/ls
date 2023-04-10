@@ -8,7 +8,7 @@ IFLAGS	= $(addprefix -I, $(IDIR))
 
 SDIR	= src
 ODIR	= .obj
-IDIR	= includes libkm/includes
+IDIR	= includes libkm/includes src/
 
 ifdef DEBUG
 	CFLAGS += -g -D DEBUG

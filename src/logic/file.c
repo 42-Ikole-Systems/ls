@@ -22,10 +22,10 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-file_type get_file_type(struct stat statBuf)
+file_type get_file_type(struct stat statBuf, ls_flags flags)
 {
 	// Check the file type
-	if (S_ISREG(statBuf.st_mode)) {
+	if (S_ISREG(statBuf.st_mode) || flags & flag_display_directory_as_file) {
 		return regular_file_type;
 	}
 	else if (S_ISDIR(statBuf.st_mode)) {
@@ -59,12 +59,12 @@ bool set_stat_info(operand_list_t* operand, ls_flags flags)
 	 // Get file status
 	if (stat(operand->name, &statBuf) == -1)
 	{
-		perror("stat");
+		perror(operand->name);
 		return false;
 	}
 	operand->statInfo = statBuf;
 
-	operand->type = get_file_type(statBuf);
+	operand->type = get_file_type(statBuf, flags);
 	if (operand->type == UNKNOWN_TYPE)
 	{
 		return false;
@@ -83,7 +83,7 @@ operand_list_t* get_files_in_directory(const char* dirName, ls_flags flags)
     dir = opendir(dirName);
     if (dir == NULL)
 	{
-        perror("opendir");
+        perror(dirName);
         return NULL;
     }
 
@@ -91,7 +91,8 @@ operand_list_t* get_files_in_directory(const char* dirName, ls_flags flags)
     // Read each entry in directory
     while ((entry = readdir(dir)) != NULL)
 	{
-		const char* filename = entry->d_name;
+		char* filename = NULL;
+		km_sprintf(&filename, "%s/%s", dirName, entry->d_name);
 		operand_list_t* currentOperand = list_append(&directory_files, filename);
 		if (currentOperand == NULL)
 		{
