@@ -15,10 +15,40 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../parsing/parse.h"
+#include "parsing/parse.h"
 #include "libkm.h"
 
 #include <stdlib.h>
+
+static void free_node(operand_list_t* node)
+{
+	node->next = NULL;
+	free((void*)node->filename);
+	free((void*)node->path);
+	node->filename = NULL;
+	node->path = NULL;
+	free(node);
+}
+
+void list_remove_if(operand_list_t** list, const char* filename)
+{
+	operand_list_t* prev = NULL;
+	for (operand_list_t* node = *list; node != NULL; node = node->next)
+	{
+		if (km_strcmp(node->filename, filename) == 0)
+		{
+			if (prev == NULL) {
+				*list = node->next;
+			}
+			else {
+				prev->next = node->next;
+			}
+			free_node(node);
+			return ;
+		}
+		prev = node;
+	}
+}
 
 void clear_list(operand_list_t* node)
 {
@@ -28,14 +58,10 @@ void clear_list(operand_list_t* node)
 	{
 		tmp = node;
 		node = node->next;
-		tmp->next = NULL;
-		free((void*)tmp->filename);
-		free((void*)tmp->path);
-		tmp->filename = NULL;
-		tmp->path = NULL;
-		free(tmp);
+		free_node(tmp);
 	}
 }
+
 
 operand_list_t* list_append(operand_list_t** list, const char* dir, const char* filename)
 {

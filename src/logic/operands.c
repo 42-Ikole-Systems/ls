@@ -42,13 +42,16 @@ int set_operand_data(operand_list_t* operands, ls_flags flags)
 
 void split_operands(operand_list_t** operands, operand_list_t** files, operand_list_t** directories)
 {
-	for (operand_list_t* node = *operands; node != NULL; node = node->next)
+	operand_list_t* node = *operands;
+	while (node != NULL)
 	{
-		if (node->type == directory_type) {
-			list_append_node(directories, node);
+		operand_list_t* tmp = node;
+		node = node->next;
+		if (tmp->type == directory_type) {
+			list_append_node(directories, tmp);
 		}
 		else {
-			list_append_node(files, node);
+			list_append_node(files, tmp);
 		}
 	}
 	*operands = NULL;
@@ -232,7 +235,13 @@ static int get_amount_of_characters(size_t n)
 	return amountOfCharacers;
 }
 
-int print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags)
+static void remove_directory_indicators(operand_list_t** directories)
+{
+	list_remove_if(directories, ".");
+	list_remove_if(directories, "..");
+}
+
+int print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags) // rename and split into subfunctions
 {
 	int status = LS_SUCCESS;
 
@@ -275,7 +284,7 @@ int print_operands(const operand_list_t* files, const operand_list_t* directorie
 	// directory
 	for (const operand_list_t* node = directories; status == LS_SUCCESS && node != NULL; node = node->next)
 	{
-		km_printf("directory: %s\n", node->path);
+		km_printf("\ndirectory: %s\n", node->path);
 		operand_list_t* directoryEntries = get_files_in_directory(node->path, flags);
 		sort(&directoryEntries, flags);
 		status = print_operands(directoryEntries, NULL, flags);
@@ -284,6 +293,7 @@ int print_operands(const operand_list_t* files, const operand_list_t* directorie
 			operand_list_t* subdirFiles = NULL;
 			operand_list_t* subdirDirs = NULL;
 			split_operands(&directoryEntries, &subdirFiles, &subdirDirs);
+			remove_directory_indicators(&subdirDirs);
 			status = print_operands(NULL, subdirDirs, flags);
 			clear_list(subdirFiles);
 			clear_list(subdirDirs);

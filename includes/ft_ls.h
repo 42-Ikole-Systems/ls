@@ -113,6 +113,11 @@
 	*/
 	operand_list_t* list_append(operand_list_t** list, const char* dir, const char* filename);
 
+	/*!
+	 * @brief removes node if filename == filename
+	 * @param filename node with this filename will be removed
+	*/
+	void list_remove_if(operand_list_t** list, const char* filename);
 
 	/*!
 	 * @brief appends node to end of list
