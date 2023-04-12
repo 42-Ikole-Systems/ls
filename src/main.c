@@ -32,7 +32,7 @@ int main(int argc, const char** argv)
 	if (operands == NULL)
 	{
 		// add current directory if no operand is given
-		if (list_append(&operands, ".") == NULL) {
+		if (list_append(&operands, ".", ".") == NULL) {
 			return LS_ERROR;
 		}
 	}

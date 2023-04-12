@@ -60,7 +60,8 @@
 	*/
 	typedef struct operand_list_s
 	{
-		const char*				name;
+		const char*				path;
+		const char*				filename;
 		file_type				type;
 		struct stat				statInfo;
 		time_t					time;
@@ -105,11 +106,12 @@
 	* @brief creates and appends a new node to the end of the list
 	*
 	* @param list pointer to the list
-	* @param name -
+	* @param dir will be copied
+	* @param filename will be copied
 	* 
 	* @return newly apended node, NULL if fails
 	*/
-	operand_list_t* list_append(operand_list_t** list, const char* name);
+	operand_list_t* list_append(operand_list_t** list, const char* dir, const char* filename);
 
 
 	/*!

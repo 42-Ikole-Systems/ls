@@ -20,9 +20,9 @@
 
 #include <ctype.h>
 
-int add_operand(const char* operand, operand_list_t** operand_list)
+int add_operand(const char* dir, const char* operand, operand_list_t** operand_list)
 {
-	operand_list_t* newNode = list_append(operand_list, operand);
+	operand_list_t* newNode = list_append(operand_list, dir, operand);
 	if (newNode == NULL) {
 		return LS_ERROR;
 	}
@@ -46,7 +46,7 @@ bool parse(int argc, const char** argv, ls_flags* flags, operand_list_t** operan
 	// parse operands next
 	for (; error == false && i < argc; i++)
 	{
-		if (add_operand(argv[i], operand_list) == LS_ERROR)
+		if (add_operand(".", argv[i], operand_list) == LS_ERROR)
 		{
 			error = true;
 			clear_list(*operand_list);

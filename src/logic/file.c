@@ -57,9 +57,9 @@ bool set_stat_info(operand_list_t* operand, ls_flags flags)
 	struct stat statBuf;
 
 	 // Get file status
-	if (stat(operand->name, &statBuf) == -1)
+	if (stat(operand->path, &statBuf) == -1)
 	{
-		perror(operand->name);
+		perror(operand->path);
 		return false;
 	}
 	operand->statInfo = statBuf;
@@ -91,9 +91,7 @@ operand_list_t* get_files_in_directory(const char* dirName, ls_flags flags)
     // Read each entry in directory
     while ((entry = readdir(dir)) != NULL)
 	{
-		char* filename = NULL;
-		km_sprintf(&filename, "%s/%s", dirName, entry->d_name);
-		operand_list_t* currentOperand = list_append(&directory_files, filename);
+		operand_list_t* currentOperand = list_append(&directory_files, dirName, entry->d_name);
 		if (currentOperand == NULL)
 		{
 			error = true;

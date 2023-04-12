@@ -250,7 +250,7 @@ int print_operands(const operand_list_t* files, const operand_list_t* directorie
 			const char* groupName = get_group_name(node); // Group name (or ID)
 			const size_t filesize = get_filesize(node); // File size (in bytes)
 			const char* fileTime = get_time(node); // Date and time of last modification
-			const char* filename = node->name; // File name
+			const char* filename = node->filename; // File name
 
 			if (ownerName == NULL || groupName == NULL || fileTime == NULL)
 			{
@@ -267,7 +267,7 @@ int print_operands(const operand_list_t* files, const operand_list_t* directorie
 		}
 		else
 		{
-			if (km_printf("%s\t", node->name) < 0) {
+			if (km_printf("%s\t", node->filename) < 0) {
 				status = LS_ERROR;
 			}
 		}
@@ -275,8 +275,8 @@ int print_operands(const operand_list_t* files, const operand_list_t* directorie
 	// directory
 	for (const operand_list_t* node = directories; status == LS_SUCCESS && node != NULL; node = node->next)
 	{
-		km_printf("directory: %s\n", node->name);
-		operand_list_t* directoryEntries = get_files_in_directory(node->name, flags);
+		km_printf("directory: %s\n", node->path);
+		operand_list_t* directoryEntries = get_files_in_directory(node->path, flags);
 		sort(&directoryEntries, flags);
 		status = print_operands(directoryEntries, NULL, flags);
 		if (status == LS_SUCCESS && flags & flag_recursive)

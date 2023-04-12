@@ -29,13 +29,15 @@ void clear_list(operand_list_t* node)
 		tmp = node;
 		node = node->next;
 		tmp->next = NULL;
-		free((void*)tmp->name);
-		tmp->name = NULL;
+		free((void*)tmp->filename);
+		free((void*)tmp->path);
+		tmp->filename = NULL;
+		tmp->path = NULL;
 		free(tmp);
 	}
 }
 
-operand_list_t* list_append(operand_list_t** list, const char* operand)
+operand_list_t* list_append(operand_list_t** list, const char* dir, const char* filename)
 {
 	if (list == NULL){
 		return NULL;
@@ -49,11 +51,20 @@ operand_list_t* list_append(operand_list_t** list, const char* operand)
 	}
 
 	newNode->next = NULL;
-	newNode->name = km_strdup(operand);
-	if (newNode->name == NULL) {
+	newNode->filename = km_strdup(filename);
+	if (newNode->filename == NULL)
+	{
 		free(newNode);
 		return NULL;
 	}
+	char* path = NULL;
+	if (km_sprintf(&path, "%s/%s", dir, filename) < 0)
+	{
+		free((void*)newNode->filename);
+		free(newNode);
+		return NULL;
+	}
+	newNode->path = path;
 
 	if (*list == NULL)
 	{

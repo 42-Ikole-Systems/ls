@@ -76,7 +76,7 @@ compare_function_t get_compare_function(ls_flags flags)
 
 bool lexicographical_compare(operand_list_t* left, operand_list_t* right)
 {
-	return (km_strcmp(left->name, right->name) > 0);
+	return (km_strcmp(left->filename, right->filename) > 0);
 }
 
 bool reverse_lexicographical_compare(operand_list_t* left, operand_list_t* right)
