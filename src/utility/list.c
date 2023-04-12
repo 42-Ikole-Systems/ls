@@ -62,6 +62,28 @@ void clear_list(operand_list_t* node)
 	}
 }
 
+static int set_directory(operand_list_t* node, const char* dir, const char* filename)
+{
+	char* path = NULL;
+
+	if (dir == NULL)
+	{
+		path = km_strdup(filename);
+		if (path == NULL)
+		{
+			return LS_ERROR;
+		}
+	}
+	else
+	{
+		if (km_sprintf(&path, "%s/%s", dir, filename) < 0)
+		{
+			return LS_ERROR;
+		}
+	}
+	node->path = path;
+	return LS_SUCCESS;
+}
 
 operand_list_t* list_append(operand_list_t** list, const char* dir, const char* filename)
 {
@@ -83,14 +105,13 @@ operand_list_t* list_append(operand_list_t** list, const char* dir, const char* 
 		free(newNode);
 		return NULL;
 	}
-	char* path = NULL;
-	if (km_sprintf(&path, "%s/%s", dir, filename) < 0)
+	
+	if (set_directory(newNode, dir, filename) != LS_SUCCESS)
 	{
 		free((void*)newNode->filename);
 		free(newNode);
 		return NULL;
 	}
-	newNode->path = path;
 
 	if (*list == NULL)
 	{
