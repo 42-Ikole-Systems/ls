@@ -9,10 +9,8 @@ SRC :=	main.c \
 		logic/operands.c \
 		logic/sort.c
 
-LIB_LOCATIONS = libkm/
-LIB_NAMES = km
-
-LIBS  = $(addprefix -L, $(LIB_LOCATIONS))
-LIBS += $(addprefix -l, $(LIB_NAMES))
+LIBKM_LOCATION = libkm/
+LIBKM = $(LIBKM_LOCATION)libkm.a
+LIBKM_LIB = -L$(LIBKM_LOCATION) -lkm
 
 endif

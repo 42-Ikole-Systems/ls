@@ -4,41 +4,40 @@ include $(SETTINGS_DIR)/src.mk
 include $(SETTINGS_DIR)/settings.mk
 include $(SETTINGS_DIR)/colors.mk
 
-all:
-	@$(MAKE) $(NAME)
+all: $(NAME)
 
 # Compilation
-$(NAME): $(LIBS) $(OBJ)
+$(NAME): $(LIBKM) $(OBJ)
 	@echo "$(COLOR_GREEN)Creating ls executable...$(COLOR_RESET)"
-	@$(CXX) -o $@ $(OBJ) $(LIBS) $(LFLAGS) $(CFLAGS)
+	@$(CXX) -o $@ $(OBJ) $(LIBKM_LIB) $(LFLAGS) $(CFLAGS)
 
 $(OBJ): $(ODIR)/%.o: $(SDIR)/%.c
 	@mkdir -p $(@D)
 	@echo "$(COLOR_LBLUE)Compiling...	$(COLOR_BLUE)$<$(COLOR_RESET)"
 	@$(CC) -c -o $@ $< $(CFLAGS) $(IFLAGS)
 
-$(LIBS):
-	@$(MAKE) -C libkm
+$(LIBKM):
+	@$(MAKE) -C $(LIBKM_LOCATION)
 
 # Clean up
 .PHONY: clean fclean re
 
 clean:
 	@echo "$(COLOR_YELLOW)clean $(NAME)... $(COLOR_RESET)"
-	@$(MAKE) clean -C libkm
+	@$(MAKE) clean -C $(LIBKM_LOCATION)
 	@printf "$(COLOR_RED)"
 	$(RM) -r $(ODIR)
 	@printf "$(COLOR_RESET)"
 
 fclean: clean
 	@echo "$(COLOR_YELLOW)force clean $(NAME)... $(COLOR_RESET)"
-	@$(MAKE) fclean -C libkm
+	@$(MAKE) fclean -C $(LIBKM_LOCATION)
 	@printf "$(COLOR_RED)"
 	$(RM) $(NAME)
 	@printf "$(COLOR_RESET)"
 
 re: fclean
-	@$(MAKE) re -C libkm
+	@$(MAKE) re -C $(LIBKM_LOCATION)
 	@$(MAKE) all
 
 # phony
@@ -47,15 +46,15 @@ re: fclean
 # Debugging
 debug: fclean
 	@echo "$(COLOR_YELLOW)Building $(NAME) debug... $(COLOR_RESET)"
-	@$(MAKE) debug -C libkm
+	@$(MAKE) debug -C $(LIBKM_LOCATION)
 	@$(MAKE) DEBUG=1
 
 leaks: fclean
 	@echo "$(COLOR_YELLOW)Building $(NAME) leaks... $(COLOR_RESET)"
-	@$(MAKE) leaks -C libkm
+	@$(MAKE) leaks -C $(LIBKM_LOCATION)
 	@$(MAKE) LEAKS=1
 
 fsanitize: fclean
 	@echo "$(COLOR_YELLOW)Building $(NAME) fsanitize... $(COLOR_RESET)"
-	@$(MAKE) fsanitize -C libkm
+	@$(MAKE) fsanitize -C $(LIBKM_LOCATION)
 	@$(MAKE) FSANITIZE=1
