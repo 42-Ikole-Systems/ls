@@ -46,7 +46,7 @@ bool parse(int argc, const char** argv, ls_flags* flags, operand_list_t** operan
 	// parse operands next
 	for (; error == false && i < argc; i++)
 	{
-		if (add_operand(".", argv[i], operand_list) == LS_ERROR)
+		if (add_operand(NULL, argv[i], operand_list) == LS_ERROR)
 		{
 			error = true;
 			clear_list(*operand_list);

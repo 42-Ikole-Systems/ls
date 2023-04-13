@@ -241,12 +241,28 @@ static void remove_directory_indicators(operand_list_t** directories)
 	list_remove_if(directories, "..");
 }
 
+static bool should_display_directory_name(const operand_list_t* files, const operand_list_t* directories)
+{
+	if (files && directories) {
+		return true;
+	}
+	else if (!files && directories && directories->next) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 int print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags) // rename and split into subfunctions
 {
 	int status = LS_SUCCESS;
 
 	const int hardlinkPrecision = get_amount_of_characters(get_most_links(files, directories)) + 1;
 	const int filesizePrecision = get_amount_of_characters(get_largest_file_size(files, directories)) + 1;
+
+	bool displayDirectoryName = should_display_directory_name(files, directories);
+
 	// files
 	for (const operand_list_t* node = files; status == LS_SUCCESS && node != NULL; node = node->next)
 	{
@@ -276,7 +292,8 @@ int print_operands(const operand_list_t* files, const operand_list_t* directorie
 		}
 		else
 		{
-			if (km_printf("%s\t", node->filename) < 0) {
+			const char whitespace = (node->next != NULL) ? '\t' : '\n';
+			if (km_printf("%s%c", node->filename, whitespace) < 0) {
 				status = LS_ERROR;
 			}
 		}
@@ -284,7 +301,10 @@ int print_operands(const operand_list_t* files, const operand_list_t* directorie
 	// directory
 	for (const operand_list_t* node = directories; status == LS_SUCCESS && node != NULL; node = node->next)
 	{
-		km_printf("\ndirectory: %s\n", node->path);
+		if (displayDirectoryName)
+		{
+			km_printf("\n%s:\n", node->path);
+		} 
 		operand_list_t* directoryEntries = get_files_in_directory(node->path, flags);
 		sort(&directoryEntries, flags);
 		status = print_operands(directoryEntries, NULL, flags);
