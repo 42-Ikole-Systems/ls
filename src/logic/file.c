@@ -91,6 +91,9 @@ operand_list_t* get_files_in_directory(const char* dirName, ls_flags flags)
     // Read each entry in directory
     while ((entry = readdir(dir)) != NULL)
 	{
+		if ((flags & flag_hidden_directories) == false && entry->d_name[0] == '.') {
+			continue ; // skip hidden directories
+		}
 		operand_list_t* currentOperand = list_append(&directory_files, dirName, entry->d_name);
 		if (currentOperand == NULL)
 		{
