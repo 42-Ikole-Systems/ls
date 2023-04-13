@@ -131,4 +131,10 @@
 // Logic //
 ///////////
 
-	int print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags);
+	/*!
+	 * @brief handles listing of all files etc.
+	 * @param files will print all information about file
+	 * @param directories all entries will be listed (might be recursively)
+	 * @param flags -
+	*/
+	int list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags);

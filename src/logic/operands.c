@@ -186,7 +186,7 @@ static char* get_time(const operand_list_t* node)
 	return (result);
 }
 
-static size_t get_most_links(const operand_list_t* files, const operand_list_t* directories)
+static size_t get_most_links(const operand_list_t* files)
 {
 	off_t links = 0;
 	for (const operand_list_t* node = files; node != NULL; node = node->next)
@@ -195,25 +195,13 @@ static size_t get_most_links(const operand_list_t* files, const operand_list_t* 
 			links = node->statInfo.st_nlink;
 		}
 	}
-	for (const operand_list_t* node = directories; node != NULL; node = node->next)
-	{
-		if (node->statInfo.st_nlink > links) {
-			links = node->statInfo.st_nlink;
-		}
-	}
 	return (size_t)links;
 }
 
-static size_t get_largest_file_size(const operand_list_t* files, const operand_list_t* directories)
+static size_t get_largest_file_size(const operand_list_t* files)
 {
 	off_t largestFileSize = 0;
 	for (const operand_list_t* node = files; node != NULL; node = node->next)
-	{
-		if (node->statInfo.st_size > largestFileSize) {
-			largestFileSize = node->statInfo.st_size;
-		}
-	}
-	for (const operand_list_t* node = directories; node != NULL; node = node->next)
 	{
 		if (node->statInfo.st_size > largestFileSize) {
 			largestFileSize = node->statInfo.st_size;
@@ -254,14 +242,12 @@ static bool should_display_directory_name(const operand_list_t* files, const ope
 	}
 }
 
-int print_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags) // rename and split into subfunctions
+static int print_files(const operand_list_t* files, ls_flags flags)
 {
 	int status = LS_SUCCESS;
 
-	const int hardlinkPrecision = get_amount_of_characters(get_most_links(files, directories)) + 1;
-	const int filesizePrecision = get_amount_of_characters(get_largest_file_size(files, directories)) + 1;
-
-	bool displayDirectoryName = should_display_directory_name(files, directories);
+	const int hardlinkPrecision = get_amount_of_characters(get_most_links(files)) + 1;
+	const int filesizePrecision = get_amount_of_characters(get_largest_file_size(files)) + 1;
 
 	// files
 	for (const operand_list_t* node = files; status == LS_SUCCESS && node != NULL; node = node->next)
@@ -282,8 +268,21 @@ int print_operands(const operand_list_t* files, const operand_list_t* directorie
 				status = LS_ERROR;
 			}
 
-			if (status == LS_SUCCESS
-				&& km_printf("%c%s %*llu %s %s %*llu %12s %s\n", entryType, fileMode, hardlinkPrecision, hardLinks, ownerName, groupName, filesizePrecision, filesize, fileTime, filename) < 0)
+			static const int fileTimeWidth = 12; // ie: `12 Apr 13:15` || ` 12 Apr 2022`
+			if (status == LS_SUCCESS &&
+				km_printf("%c%s %*llu %s %s %*llu %*s %s\n",
+					entryType, // %c
+					fileMode, // %s
+					hardlinkPrecision, // %*
+					hardLinks, // llu
+					ownerName, // %s
+					groupName, // %s
+					filesizePrecision, //*
+					filesize, // %llu
+					fileTimeWidth, // %*
+					fileTime, // %s
+					filename // %s
+				) < 0)
 			{
 				status = LS_ERROR;
 			}
@@ -298,27 +297,59 @@ int print_operands(const operand_list_t* files, const operand_list_t* directorie
 			}
 		}
 	}
+	return status;
+}
+
+static int list_subdirectories(operand_list_t** directoryEntries, ls_flags flags)
+{
+	operand_list_t* subdirFiles = NULL;
+	operand_list_t* subdirDirs = NULL;
+	split_operands(directoryEntries, &subdirFiles, &subdirDirs);
+	remove_directory_indicators(&subdirDirs);
+
+	// recursively handle each subdirectory
+	int status = list_operands(NULL, subdirDirs, flags);
+
+	clear_list(subdirFiles);
+	clear_list(subdirDirs);
+
+	return status;
+}
+
+static int list_directories(const operand_list_t* directories, ls_flags flags, bool displayDirectoryName)
+{
+	int status = LS_SUCCESS;
 	// directory
 	for (const operand_list_t* node = directories; status == LS_SUCCESS && node != NULL; node = node->next)
 	{
 		if (displayDirectoryName)
 		{
 			km_printf("\n%s:\n", node->path);
-		} 
+		}
+
 		operand_list_t* directoryEntries = get_files_in_directory(node->path, flags);
 		sort(&directoryEntries, flags);
-		status = print_operands(directoryEntries, NULL, flags);
+		// list every entry as file
+		status = list_operands(directoryEntries, NULL, flags);
+
 		if (status == LS_SUCCESS && flags & flag_recursive)
 		{
-			operand_list_t* subdirFiles = NULL;
-			operand_list_t* subdirDirs = NULL;
-			split_operands(&directoryEntries, &subdirFiles, &subdirDirs);
-			remove_directory_indicators(&subdirDirs);
-			status = print_operands(NULL, subdirDirs, flags);
-			clear_list(subdirFiles);
-			clear_list(subdirDirs);
+			list_subdirectories(&directoryEntries, flags);
 		}
 		clear_list(directoryEntries);
+	}
+	return status;
+}
+
+int list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags)
+{
+	int status = LS_SUCCESS;
+
+	status = print_files(files, flags);
+	if (status == LS_SUCCESS)
+	{
+		bool displayDirectoryName = should_display_directory_name(files, directories);
+		status = list_directories(directories, flags, displayDirectoryName);
 	}
 	return status;
 }
