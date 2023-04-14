@@ -19,6 +19,7 @@
 #include "file.h"
 #include "sort.h"
 #include "libkm.h"
+#include "colorcodes.h"
 
 #include <unistd.h>
 #include <pwd.h>
@@ -242,18 +243,62 @@ static bool should_display_directory_name(const operand_list_t* files, const ope
 	}
 }
 
-static char* get_filename(const operand_list_t* file)
+static bool is_executable(const operand_list_t* file)
 {
+	const int filemode = file->statInfo.st_mode;
+	return (filemode & S_IXUSR || filemode & S_IXGRP || filemode & S_IXOTH);
+}
+
+
+static char* get_filename(const operand_list_t* file, ls_flags flags)
+{
+	char* filename = NULL;
+	if (flags & flag_colorised_output)
+	{
+		char* color = "";
+		switch (file->type)
+		{
+			case regular_file_type: {
+				if (is_executable(file)) {
+					color = COLOR_RED;
+				}
+				break ;
+			}
+			case directory_type: {
+				color = COLOR_LIGHT_BLUE;
+				break ;
+			}
+			case symlink_type: {
+				color = COLOR_PURPLE;
+				break ;
+			}
+			default: {
+				// do nothing
+			}
+		}
+		if (km_sprintf(&filename, "%s%s%s", color, file->filename, COLOR_RESET) < 0) {
+			filename = NULL;
+		}
+	}
+	else {
+		filename = km_strdup(file->filename);
+	}
+
+	if (filename == NULL) {
+		return NULL;
+	}
+
 	if (file->type == symlink_type)
 	{
 		char* filenameWithDestination;
-		if (km_sprintf(&filenameWithDestination, "%s -> %s", file->filename, file->symlinkDestination) < 0) {
-			return NULL;
+		if (km_sprintf(&filenameWithDestination, "%s -> %s", filename, file->symlinkDestination) < 0) {
+			filenameWithDestination = NULL;
 		}
+		free(filename);
 		return filenameWithDestination;
 	}
 	else {
-		return km_strdup(file->filename);
+		return filename;
 	}
 }
 
@@ -276,7 +321,7 @@ static int print_files(const operand_list_t* files, ls_flags flags)
 			const char* groupName = get_group_name(node); // Group name (or ID)
 			const size_t filesize = get_filesize(node); // File size (in bytes)
 			const char* fileTime = get_time(node); // Date and time of last modification !! MUST BE FREED !!
-			const char* filename = get_filename(node); // !! MUST BE FREEED !!
+			const char* filename = get_filename(node, flags); // !! MUST BE FREEED !!
 
 			if (ownerName == NULL || groupName == NULL || fileTime == NULL || filename == NULL)
 			{

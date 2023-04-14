@@ -31,6 +31,7 @@ static ls_flags get_flag(char c)
 		case 'f': return flag_no_sort;
 		case 'g': return flag_display_groupname;
 		case 'd': return flag_display_directory_as_file;
+		case 'G': return flag_colorised_output;
 		default:
 			return flag_unknown;
 	}
