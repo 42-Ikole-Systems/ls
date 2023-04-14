@@ -19,6 +19,7 @@
 
 #include <stdbool.h>
 #include <sys/stat.h>
+#include <ctype.h>
 
 ///////////
 // Types //
@@ -138,5 +139,6 @@
 	 * @param files will print all information about file
 	 * @param directories all entries will be listed (might be recursively)
 	 * @param flags -
+	 * @param depth when listing recursively contains recursion depth
 	*/
-	int list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags);
+	int list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags, size_t depth);

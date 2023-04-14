@@ -46,7 +46,7 @@ int main(int argc, const char** argv)
 		sort(&operands, flags);
 		split_operands(&operands, &files, &directories);
 
-		status = list_operands(files, directories, flags);
+		status = list_operands(files, directories, flags, 0);
 		clear_list(files);
 		clear_list(directories);
 		clear_list(operands);

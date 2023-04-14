@@ -230,9 +230,12 @@ static void remove_directory_indicators(operand_list_t** directories)
 	list_remove_if(directories, "..");
 }
 
-static bool should_display_directory_name(const operand_list_t* files, const operand_list_t* directories)
+static bool should_display_directory_name(const operand_list_t* files, const operand_list_t* directories, size_t depth)
 {
-	if (files && directories) {
+	if (depth > 0) {
+		return true;
+	}
+	else if (files && directories) {
 		return true;
 	}
 	else if (!files && directories && directories->next) {
@@ -361,7 +364,7 @@ static int print_files(const operand_list_t* files, ls_flags flags)
 	return status;
 }
 
-static int list_subdirectories(operand_list_t** directoryEntries, ls_flags flags)
+static int list_subdirectories(operand_list_t** directoryEntries, ls_flags flags, size_t depth)
 {
 	operand_list_t* subdirFiles = NULL;
 	operand_list_t* subdirDirs = NULL;
@@ -369,7 +372,7 @@ static int list_subdirectories(operand_list_t** directoryEntries, ls_flags flags
 	remove_directory_indicators(&subdirDirs);
 
 	// recursively handle each subdirectory
-	int status = list_operands(NULL, subdirDirs, flags);
+	int status = list_operands(NULL, subdirDirs, flags, depth + 1);
 
 	clear_list(subdirFiles);
 	clear_list(subdirDirs);
@@ -390,7 +393,7 @@ static int list_total_blocks(const operand_list_t* entries)
 	return LS_SUCCESS;
 }
 
-static int list_directories(const operand_list_t* directories, ls_flags flags, bool displayDirectoryName)
+static int list_directories(const operand_list_t* directories, ls_flags flags, bool displayDirectoryName, size_t depth)
 {
 	int status = LS_SUCCESS;
 	// directory
@@ -414,22 +417,22 @@ static int list_directories(const operand_list_t* directories, ls_flags flags, b
 
 		if (status == LS_SUCCESS && flags & flag_recursive)
 		{
-			status = list_subdirectories(&directoryEntries, flags);
+			status = list_subdirectories(&directoryEntries, flags, depth);
 		}
 		clear_list(directoryEntries);
 	}
 	return status;
 }
 
-int list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags)
+int list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags, size_t depth)
 {
 	int status = LS_SUCCESS;
 
 	status = print_files(files, flags);
 	if (status == LS_SUCCESS)
 	{
-		bool displayDirectoryName = should_display_directory_name(files, directories);
-		status = list_directories(directories, flags, displayDirectoryName);
+		bool displayDirectoryName = should_display_directory_name(files, directories, depth);
+		status = list_directories(directories, flags, displayDirectoryName, depth);
 	}
 	return status;
 }
