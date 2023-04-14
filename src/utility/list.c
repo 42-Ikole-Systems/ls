@@ -125,6 +125,7 @@ operand_list_t* list_append(operand_list_t** list, const char* dir, const char* 
 		}
 		node->next = newNode;
 	}
+	newNode->symlinkDestination = NULL;
 	newNode->time = 0;
 	return newNode;
 }

@@ -62,6 +62,7 @@
 	{
 		const char*				path;
 		const char*				filename;
+		const char*				symlinkDestination;
 		file_type				type;
 		struct stat				statInfo;
 		time_t					time;

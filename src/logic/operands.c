@@ -242,6 +242,21 @@ static bool should_display_directory_name(const operand_list_t* files, const ope
 	}
 }
 
+static char* get_filename(const operand_list_t* file)
+{
+	if (file->type == symlink_type)
+	{
+		char* filenameWithDestination;
+		if (km_sprintf(&filenameWithDestination, "%s -> %s", file->filename, file->symlinkDestination) < 0) {
+			return NULL;
+		}
+		return filenameWithDestination;
+	}
+	else {
+		return km_strdup(file->filename);
+	}
+}
+
 static int print_files(const operand_list_t* files, ls_flags flags)
 {
 	int status = LS_SUCCESS;
@@ -260,10 +275,10 @@ static int print_files(const operand_list_t* files, ls_flags flags)
 			const char* ownerName = get_owner_name(node); // Owner name (or ID)
 			const char* groupName = get_group_name(node); // Group name (or ID)
 			const size_t filesize = get_filesize(node); // File size (in bytes)
-			const char* fileTime = get_time(node); // Date and time of last modification
-			const char* filename = node->filename; // File name
+			const char* fileTime = get_time(node); // Date and time of last modification !! MUST BE FREED !!
+			const char* filename = get_filename(node); // !! MUST BE FREEED !!
 
-			if (ownerName == NULL || groupName == NULL || fileTime == NULL)
+			if (ownerName == NULL || groupName == NULL || fileTime == NULL || filename == NULL)
 			{
 				status = LS_ERROR;
 			}
@@ -287,6 +302,7 @@ static int print_files(const operand_list_t* files, ls_flags flags)
 				status = LS_ERROR;
 			}
 
+			free((void*)filename);
 			free((void*)fileTime);
 		}
 		else

@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <limits.h>
 
 file_type get_file_type(struct stat statBuf, ls_flags flags)
 {
@@ -52,12 +53,28 @@ file_type get_file_type(struct stat statBuf, ls_flags flags)
 	}
 }
 
+static int set_symlink_destination(operand_list_t* operand)
+{
+	static const int bufferSize = PATH_MAX + 1;
+	char buffer[bufferSize];
+
+	if (readlink(operand->path, buffer, bufferSize) < 0) {
+		return LS_ERROR;
+	}
+	operand->symlinkDestination = km_strdup(buffer);
+	if (operand->symlinkDestination == NULL) {
+		return LS_ERROR;
+	}
+
+	return LS_SUCCESS;
+}
+
 bool set_stat_info(operand_list_t* operand, ls_flags flags)
 {
 	struct stat statBuf;
 
 	 // Get file status
-	if (stat(operand->path, &statBuf) == -1)
+	if (lstat(operand->path, &statBuf) == -1)
 	{
 		perror(operand->path);
 		return false;
@@ -65,7 +82,12 @@ bool set_stat_info(operand_list_t* operand, ls_flags flags)
 	operand->statInfo = statBuf;
 
 	operand->type = get_file_type(statBuf, flags);
-	if (operand->type == UNKNOWN_TYPE)
+	if (operand->type == symlink_type) {
+		if (set_symlink_destination(operand) != LS_SUCCESS) {
+			return false;
+		}
+	}
+	else if (operand->type == UNKNOWN_TYPE)
 	{
 		return false;
 	}
