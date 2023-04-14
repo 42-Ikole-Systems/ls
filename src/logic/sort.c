@@ -31,7 +31,6 @@ void sort(operand_list_t** list, ls_flags flags)
     do {
         swapped = false;
         curr = *list;
-
 		compare_function_t compare = get_compare_function(flags);
         while (curr && curr->next && curr->next != prev)
 		{
@@ -55,6 +54,7 @@ void sort(operand_list_t** list, ls_flags flags)
 			prev = curr;
             curr = curr->next;
         }
+		prev = NULL;
     } while (swapped);
 }
 

@@ -316,6 +316,19 @@ static int list_subdirectories(operand_list_t** directoryEntries, ls_flags flags
 	return status;
 }
 
+static int list_total_blocks(const operand_list_t* entries)
+{
+	size_t total_blocks = 0;
+	for (const operand_list_t* node = entries; node != NULL; node = node->next)
+	{
+		total_blocks += node->statInfo.st_blocks;
+	}
+	if (km_printf("total %llu\n", total_blocks) < 0) {
+		return LS_ERROR;
+	}
+	return LS_SUCCESS;
+}
+
 static int list_directories(const operand_list_t* directories, ls_flags flags, bool displayDirectoryName)
 {
 	int status = LS_SUCCESS;
@@ -329,12 +342,18 @@ static int list_directories(const operand_list_t* directories, ls_flags flags, b
 
 		operand_list_t* directoryEntries = get_files_in_directory(node->path, flags);
 		sort(&directoryEntries, flags);
-		// list every entry as file
-		status = list_operands(directoryEntries, NULL, flags);
+
+		status = list_total_blocks(directoryEntries);
+
+		if (status == LS_SUCCESS)
+		{
+			// list every entry as file
+			status = print_files(directoryEntries, flags);
+		}
 
 		if (status == LS_SUCCESS && flags & flag_recursive)
 		{
-			list_subdirectories(&directoryEntries, flags);
+			status = list_subdirectories(&directoryEntries, flags);
 		}
 		clear_list(directoryEntries);
 	}
