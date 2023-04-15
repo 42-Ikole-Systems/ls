@@ -62,7 +62,7 @@ void clear_list(operand_list_t* node)
 	}
 }
 
-static int set_directory(operand_list_t* node, const char* dir, const char* filename)
+static ls_status set_directory(operand_list_t* node, const char* dir, const char* filename)
 {
 	char* path = NULL;
 
@@ -71,14 +71,14 @@ static int set_directory(operand_list_t* node, const char* dir, const char* file
 		path = km_strdup(filename);
 		if (path == NULL)
 		{
-			return LS_ERROR;
+			return LS_SERIOUS_ERROR;
 		}
 	}
 	else
 	{
 		if (km_sprintf(&path, "%s/%s", dir, filename) < 0)
 		{
-			return LS_ERROR;
+			return LS_SERIOUS_ERROR;
 		}
 	}
 	node->path = path;

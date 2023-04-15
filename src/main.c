@@ -24,20 +24,21 @@ int main(int argc, const char** argv)
 {
 	ls_flags flags = 0x00;
 	operand_list_t* operands = NULL;
+	ls_status status = LS_SUCCESS;
 
-	if (parse(argc, argv, &flags, &operands) == false) {
-		return LS_PARSE_ERROR;
+	status = parse(argc, argv, &flags, &operands);
+	if (status != LS_SUCCESS) {
+		return status;
 	}
 
 	if (operands == NULL)
 	{
 		// add current directory if no operand is given
 		if (list_append(&operands, NULL, ".") == NULL) {
-			return LS_ERROR;
+			return LS_SERIOUS_ERROR;
 		}
 	}
 
-	int status = LS_SUCCESS;
 	status = set_operand_data(operands, flags);
 	if (status == LS_SUCCESS)
 	{

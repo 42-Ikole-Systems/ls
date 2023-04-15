@@ -37,11 +37,11 @@ static ls_flags get_flag(char c)
 	}
 }
 
-int parse_flags(const char* token, ls_flags* flags)
+ls_status parse_flags(const char* token, ls_flags* flags)
 {
 	if (token[0] != '-') {
 		km_printf("Trying to parse flag, but token does not start with a `-` [%s]\n", token);
-		return LS_PARSE_ERROR;
+		return LS_SERIOUS_ERROR;
 	}
 
 	int		 flags_found = 0;
@@ -52,7 +52,7 @@ int parse_flags(const char* token, ls_flags* flags)
 		if (tmp == flag_unknown)
 		{
 			km_printf("ls: illegal option -- %c\n", token[i]);
-			return LS_PARSE_ERROR;
+			return LS_SERIOUS_ERROR;
 		}
 		*flags |= tmp;
 	}

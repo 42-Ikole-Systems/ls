@@ -28,14 +28,15 @@
 #include <assert.h>
 #include <stdlib.h>
 
-int set_operand_data(operand_list_t* operands, ls_flags flags)
+ls_status set_operand_data(operand_list_t* operands, ls_flags flags)
 {
 	for (operand_list_t* node = operands; node != NULL; node = node->next)
 	{
-		if (set_stat_info(node, flags) == false)
+		ls_status status = set_stat_info(node, flags);
+		if (status != LS_SUCCESS)
 		{
 			clear_list(operands);
-			return LS_ERROR;
+			return status;
 		}
 	}
 	return LS_SUCCESS;
@@ -305,9 +306,9 @@ static char* get_filename(const operand_list_t* file, ls_flags flags)
 	}
 }
 
-static int print_files(const operand_list_t* files, ls_flags flags)
+static ls_status print_files(const operand_list_t* files, ls_flags flags)
 {
-	int status = LS_SUCCESS;
+	ls_status status = LS_SUCCESS;
 
 	const int hardlinkPrecision = get_amount_of_characters(get_most_links(files)) + 1;
 	const int filesizePrecision = get_amount_of_characters(get_largest_file_size(files)) + 1;
@@ -328,7 +329,7 @@ static int print_files(const operand_list_t* files, ls_flags flags)
 
 			if (ownerName == NULL || groupName == NULL || fileTime == NULL || filename == NULL)
 			{
-				status = LS_ERROR;
+				status = LS_SERIOUS_ERROR;
 			}
 
 			static const int fileTimeWidth = 12; // ie: `12 Apr 13:15` || ` 12 Apr 2022`
@@ -347,7 +348,7 @@ static int print_files(const operand_list_t* files, ls_flags flags)
 					filename // %s
 				) < 0)
 			{
-				status = LS_ERROR;
+				status = LS_SERIOUS_ERROR;
 			}
 
 			free((void*)filename);
@@ -357,14 +358,14 @@ static int print_files(const operand_list_t* files, ls_flags flags)
 		{
 			const char whitespace = (node->next != NULL) ? '\t' : '\n';
 			if (km_printf("%s%c", node->filename, whitespace) < 0) {
-				status = LS_ERROR;
+				status = LS_SERIOUS_ERROR;
 			}
 		}
 	}
 	return status;
 }
 
-static int list_subdirectories(operand_list_t** directoryEntries, ls_flags flags, size_t depth)
+static ls_status list_subdirectories(operand_list_t** directoryEntries, ls_flags flags, size_t depth)
 {
 	operand_list_t* subdirFiles = NULL;
 	operand_list_t* subdirDirs = NULL;
@@ -372,7 +373,7 @@ static int list_subdirectories(operand_list_t** directoryEntries, ls_flags flags
 	remove_directory_indicators(&subdirDirs);
 
 	// recursively handle each subdirectory
-	int status = list_operands(NULL, subdirDirs, flags, depth + 1);
+	ls_status status = list_operands(NULL, subdirDirs, flags, depth + 1);
 
 	clear_list(subdirFiles);
 	clear_list(subdirDirs);
@@ -380,7 +381,7 @@ static int list_subdirectories(operand_list_t** directoryEntries, ls_flags flags
 	return status;
 }
 
-static int list_total_blocks(const operand_list_t* entries)
+static ls_status list_total_blocks(const operand_list_t* entries)
 {
 	size_t total_blocks = 0;
 	for (const operand_list_t* node = entries; node != NULL; node = node->next)
@@ -388,35 +389,37 @@ static int list_total_blocks(const operand_list_t* entries)
 		total_blocks += node->statInfo.st_blocks;
 	}
 	if (km_printf("total %llu\n", total_blocks) < 0) {
-		return LS_ERROR;
+		return LS_SERIOUS_ERROR;
 	}
 	return LS_SUCCESS;
 }
 
-static int list_directories(const operand_list_t* directories, ls_flags flags, bool displayDirectoryName, size_t depth)
+static ls_status list_directories(const operand_list_t* directories, ls_flags flags, bool displayDirectoryName, size_t depth)
 {
-	int status = LS_SUCCESS;
+	ls_status status = LS_SUCCESS;
 	// directory
 	for (const operand_list_t* node = directories; status == LS_SUCCESS && node != NULL; node = node->next)
 	{
 		if (displayDirectoryName)
 		{
-			km_printf("\n%s:\n", node->path);
+			if (km_printf("\n%s:\n", node->path) < 0) {
+				return LS_SERIOUS_ERROR;
+			}
 		}
 
-		operand_list_t* directoryEntries = get_files_in_directory(node->path, flags);
-		sort(&directoryEntries, flags);
+		operand_list_t* directoryEntries = NULL;
+		status = get_files_in_directory(node->path, flags, &directoryEntries);
+		
+		if (status == LS_SUCCESS) {
+			sort(&directoryEntries, flags);
+			status = list_total_blocks(directoryEntries);
+		}
 
-		status = list_total_blocks(directoryEntries);
-
-		if (status == LS_SUCCESS)
-		{
-			// list every entry as file
+		if (status == LS_SUCCESS) {
 			status = print_files(directoryEntries, flags);
 		}
 
-		if (status == LS_SUCCESS && flags & flag_recursive)
-		{
+		if (status == LS_SUCCESS && flags & flag_recursive) {
 			status = list_subdirectories(&directoryEntries, flags, depth);
 		}
 		clear_list(directoryEntries);
@@ -424,13 +427,12 @@ static int list_directories(const operand_list_t* directories, ls_flags flags, b
 	return status;
 }
 
-int list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags, size_t depth)
+ls_status list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags, size_t depth)
 {
-	int status = LS_SUCCESS;
+	ls_status status = LS_SUCCESS;
 
 	status = print_files(files, flags);
-	if (status == LS_SUCCESS)
-	{
+	if (status == LS_SUCCESS) {
 		bool displayDirectoryName = should_display_directory_name(files, directories, depth);
 		status = list_directories(directories, flags, displayDirectoryName, depth);
 	}

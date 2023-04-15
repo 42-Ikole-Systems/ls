@@ -27,7 +27,7 @@
  * 
  * @return the amount of flags found, -1 on error
 */
-int parse_flags(const char* token, ls_flags* flags);
+ls_status parse_flags(const char* token, ls_flags* flags);
 
 /*!
  * @brief parses operands
@@ -36,4 +36,4 @@ int parse_flags(const char* token, ls_flags* flags);
  * @param directoryOperands -
  * @param nonDirectoryOperands -
 */
-int parse_operand(const char* operand, operand_list_t** operand_list);
+ls_status parse_operand(const char* operand, operand_list_t** operand_list);

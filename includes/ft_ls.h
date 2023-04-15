@@ -25,6 +25,13 @@
 // Types //
 ///////////
 
+	typedef enum e_ls_status
+	{
+		LS_SUCCESS = 0,
+		LS_MINOR_ERROR = 1,
+		LS_SERIOUS_ERROR = 2
+	} ls_status;
+
 	typedef enum e_ls_flags
 	{
 		flag_unknown = 0x00,
@@ -71,10 +78,6 @@
 		struct operand_list_s*	next;
 	} operand_list_t;
 
-	#define LS_SUCCESS 0
-	#define LS_PARSE_ERROR 1
-	#define LS_ERROR 2
-
 	#define LS_CURRENT_DIRECTORY "."
 
 /////////////
@@ -92,7 +95,7 @@
 	* 
 	* @note it will ignore the first argument since this should be the name of the executable.
 	*/
-	bool parse(int argc, const char** argv, ls_flags* flags, operand_list_t** operand_list);
+	ls_status parse(int argc, const char** argv, ls_flags* flags, operand_list_t** operand_list);
 
 /////////////
 // Utility //
@@ -141,4 +144,4 @@
 	 * @param flags -
 	 * @param depth when listing recursively contains recursion depth
 	*/
-	int list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags, size_t depth);
+	ls_status list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags, size_t depth);

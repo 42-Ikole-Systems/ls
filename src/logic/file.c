@@ -53,23 +53,24 @@ file_type get_file_type(struct stat statBuf, ls_flags flags)
 	}
 }
 
-static int set_symlink_destination(operand_list_t* operand)
+static ls_status set_symlink_destination(operand_list_t* operand)
 {
 	static const int bufferSize = PATH_MAX + 1;
 	char buffer[bufferSize];
 
 	if (readlink(operand->path, buffer, bufferSize) < 0) {
-		return LS_ERROR;
+		perror(operand->path);
+		return LS_MINOR_ERROR;
 	}
 	operand->symlinkDestination = km_strdup(buffer);
 	if (operand->symlinkDestination == NULL) {
-		return LS_ERROR;
+		return LS_SERIOUS_ERROR;
 	}
 
 	return LS_SUCCESS;
 }
 
-bool set_stat_info(operand_list_t* operand, ls_flags flags)
+ls_status set_stat_info(operand_list_t* operand, ls_flags flags)
 {
 	struct stat statBuf;
 
@@ -77,28 +78,28 @@ bool set_stat_info(operand_list_t* operand, ls_flags flags)
 	if (lstat(operand->path, &statBuf) == -1)
 	{
 		perror(operand->path);
-		return false;
+		return LS_MINOR_ERROR;
 	}
 	operand->statInfo = statBuf;
 
+	ls_status status = LS_SUCCESS;
 	operand->type = get_file_type(statBuf, flags);
-	if (operand->type == symlink_type) {
-		if (set_symlink_destination(operand) != LS_SUCCESS) {
-			return false;
-		}
+	if (operand->type == symlink_type)
+	{
+		status = set_symlink_destination(operand);
 	}
 	else if (operand->type == UNKNOWN_TYPE)
 	{
-		return false;
+		return LS_SERIOUS_ERROR;
 	}
 
 	operand->time = (flags & flag_use_access_time) ? operand->statInfo.st_atime : operand->statInfo.st_mtime;
-	return true;
+	return status;
 }
 
-operand_list_t* get_files_in_directory(const char* dirName, ls_flags flags)
+ls_status get_files_in_directory(const char* dirName, ls_flags flags, operand_list_t** directory_files)
 {
-	operand_list_t* directory_files = NULL;
+	*directory_files = NULL;
     DIR*			dir;
     struct dirent*	entry;
 
@@ -106,34 +107,31 @@ operand_list_t* get_files_in_directory(const char* dirName, ls_flags flags)
     if (dir == NULL)
 	{
         perror(dirName);
-        return NULL;
+        return LS_MINOR_ERROR;
     }
 
-	bool error = false;
+	ls_status status = LS_SUCCESS;
     // Read each entry in directory
-    while ((entry = readdir(dir)) != NULL)
+    while ((entry = readdir(dir)) != NULL && status == LS_SUCCESS)
 	{
 		if ((flags & flag_hidden_directories) == false && entry->d_name[0] == '.') {
 			continue ; // skip hidden directories
 		}
-		operand_list_t* currentOperand = list_append(&directory_files, dirName, entry->d_name);
+		operand_list_t* currentOperand = list_append(directory_files, dirName, entry->d_name);
 		if (currentOperand == NULL)
 		{
-			error = true;
+			status = LS_SERIOUS_ERROR;
 			break ;
 		}
-		if (set_stat_info(currentOperand, flags) == false) {
-			error = true;
-			break ;
-		}
+		status = set_stat_info(currentOperand, flags);
 	}
     closedir(dir);
 
-	if (error == true)
+	if (status != LS_SUCCESS)
 	{
-		clear_list(directory_files);
-		return NULL;
+		clear_list(*directory_files);
+		*directory_files = NULL;
 	}
 
-    return directory_files;
+	return status;
 }
