@@ -124,6 +124,10 @@ ls_status get_files_in_directory(const char* dirName, ls_flags flags, operand_li
 			break ;
 		}
 		status = set_stat_info(currentOperand, flags);
+		if (status == LS_MINOR_ERROR) {
+			list_remove_if(directory_files, entry->d_name);
+			status = LS_SUCCESS;
+		}
 	}
     closedir(dir);
 

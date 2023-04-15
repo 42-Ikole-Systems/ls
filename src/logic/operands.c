@@ -33,6 +33,10 @@ ls_status set_operand_data(operand_list_t* operands, ls_flags flags)
 	for (operand_list_t* node = operands; node != NULL; node = node->next)
 	{
 		ls_status status = set_stat_info(node, flags);
+		if (status == LS_MINOR_ERROR) {
+			list_remove_if(&operands, node->filename);
+			status = LS_SUCCESS;
+		}
 		if (status != LS_SUCCESS)
 		{
 			clear_list(operands);
@@ -398,7 +402,7 @@ static ls_status list_directories(const operand_list_t* directories, ls_flags fl
 {
 	ls_status status = LS_SUCCESS;
 	// directory
-	for (const operand_list_t* node = directories; status == LS_SUCCESS && node != NULL; node = node->next)
+	for (const operand_list_t* node = directories; status != LS_SERIOUS_ERROR && node != NULL; node = node->next)
 	{
 		if (displayDirectoryName)
 		{
