@@ -315,8 +315,8 @@ static ls_status print_files(const operand_list_t* files, ls_flags flags)
 {
 	ls_status status = LS_SUCCESS;
 
-	const int hardlinkPrecision = get_amount_of_characters(get_most_links(files)) + 1;
-	const int filesizePrecision = get_amount_of_characters(get_largest_file_size(files)) + 1;
+	const int hardlinkWidth = get_amount_of_characters(get_most_links(files)) + 1;
+	const int filesizeWidth = get_amount_of_characters(get_largest_file_size(files)) + 1;
 
 	// files
 	for (const operand_list_t* node = files; status == LS_SUCCESS && node != NULL; node = node->next)
@@ -342,11 +342,11 @@ static ls_status print_files(const operand_list_t* files, ls_flags flags)
 				km_printf("%c%s %*llu %s %s %*llu %*s %s\n",
 					entryType, // %c
 					fileMode, // %s
-					hardlinkPrecision, // %*
+					hardlinkWidth, // %*
 					hardLinks, // llu
 					ownerName, // %s
 					groupName, // %s
-					filesizePrecision, //*
+					filesizeWidth, //*
 					filesize, // %llu
 					fileTimeWidth, // %*
 					fileTime, // %s
