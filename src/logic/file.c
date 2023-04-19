@@ -55,13 +55,15 @@ file_type get_file_type(struct stat statBuf, ls_flags flags)
 
 static ls_status set_symlink_destination(operand_list_t* operand)
 {
-	static const int bufferSize = PATH_MAX + 1;
-	char buffer[bufferSize];
+	static const int bufferSize = PATH_MAX;
+	char buffer[bufferSize + 1];
 
-	if (readlink(operand->path, buffer, bufferSize) < 0) {
+	ssize_t length = readlink(operand->path, buffer, bufferSize);
+	if (length < 0) {
 		perror(operand->path);
 		return LS_MINOR_ERROR;
 	}
+	buffer[length] = '\0';
 	operand->symlinkDestination = km_strdup(buffer);
 	if (operand->symlinkDestination == NULL) {
 		return LS_SERIOUS_ERROR;
