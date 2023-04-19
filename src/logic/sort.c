@@ -85,7 +85,10 @@ bool reverse_lexicographical_compare(operand_list_t* left, operand_list_t* right
 
 bool time_compare(operand_list_t* left, operand_list_t* right)
 {
-	return (left->time > right->time);
+	if (left->time == right->time) {
+		return lexicographical_compare(left, right);
+	}
+	return (left->time < right->time);
 }
 
 bool no_sort(operand_list_t* left, operand_list_t* right)
