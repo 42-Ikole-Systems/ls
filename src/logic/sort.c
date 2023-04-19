@@ -15,7 +15,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "sort.h"
+#include "logic/sort.h"
 #include "libkm.h"
 
 #include <stdlib.h>

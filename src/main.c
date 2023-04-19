@@ -19,6 +19,8 @@
 #include "libkm.h"
 #include "logic/sort.h"
 #include "logic/operands.h"
+#include "parsing/parse.h"
+#include "utility/list.h"
 
 #include <stdlib.h>
 

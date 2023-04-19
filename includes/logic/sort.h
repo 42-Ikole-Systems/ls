@@ -20,20 +20,27 @@
 #include "ft_ls.h"
 
 /*!
- * @brief -
- * 
- * @param token to check
- * @param flags variable to store found flags
- * 
- * @return the amount of flags found, -1 on error
+ * @brief sorts list based on what flags are set
 */
-ls_status parse_flags(const char* token, ls_flags* flags);
+void sort(operand_list_t** list, ls_flags flags);
 
 /*!
- * @brief parses operands
- *
- * @param operand -
- * @param directoryOperands -
- * @param nonDirectoryOperands -
+ * @brief prototype for compare function
+ * @return true if need to be swapped, false otherwise
 */
-ls_status parse_operand(const char* operand, operand_list_t** operand_list);
+typedef bool(*compare_function_t)(operand_list_t* left, operand_list_t* right);
+
+/*!
+ * @brief get the function used for comparing
+*/
+compare_function_t get_compare_function(ls_flags flags);
+
+///////////////////////
+// Compare functions //
+///////////////////////
+
+
+bool lexicographical_compare(operand_list_t* left, operand_list_t* right);
+bool reverse_lexicographical_compare(operand_list_t* left, operand_list_t* right);
+bool time_compare(operand_list_t* left, operand_list_t* right);
+bool no_sort(operand_list_t* left, operand_list_t* right);

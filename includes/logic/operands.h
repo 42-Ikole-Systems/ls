@@ -20,24 +20,28 @@
 #include "ft_ls.h"
 
 /*!
- * @brief -
- * @param filename
- * @return UNKNOWN_TYPE on failure
-*/
-file_type get_file_type(struct stat statBuf);
-
-/*!
- * @brief Gets all files in directory and sets their type
- * @param dirName -
+ * @brief sets all data for operands
+ * @param operands -
  * @param flags -
- * @param directory_files it will store all the files in the directory here
- * @return directory files will be empty on error
+ * @return LS_SUCCESS on success, anything else on error
 */
-ls_status get_files_in_directory(const char* dirName, ls_flags flags, operand_list_t** directory_files);
+ls_status set_operand_data(operand_list_t* operands, ls_flags flags);
 
 /*!
- * @brief sets statInfo in operand and sets fileType
- * @param operand -
- * @return -
+ * @brief splits operands into files and directories (by type)
+ * @param operands -
+ * @param files make sure it is empty and non NULL
+ * @param directories make sure it is empty and non NULL 
+ * 
+ * NOTE: operands will be NULL after calling this
 */
-ls_status set_stat_info(operand_list_t* operand, ls_flags flags);
+void split_operands(operand_list_t** operands, operand_list_t** files, operand_list_t** directories);
+
+/*!
+ * @brief handles listing of all files etc.
+ * @param files will print all information about file
+ * @param directories all entries will be listed (might be recursively)
+ * @param flags -
+ * @param depth when listing recursively contains recursion depth
+*/
+ls_status list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags, size_t depth);

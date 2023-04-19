@@ -20,28 +20,33 @@
 #include "ft_ls.h"
 
 /*!
- * @brief sorts list based on what flags are set
+* @brief deallocates and cleans up the list
+*
+* @param list -
 */
-void sort(operand_list_t** list, ls_flags flags);
+void clear_list(operand_list_t* list);
 
 /*!
- * @brief prototype for compare function
- * @return true if need to be swapped, false otherwise
+* @brief creates and appends a new node to the end of the list
+*
+* @param list pointer to the list
+* @param dir will be copied
+* @param filename will be copied
+* 
+* @return newly apended node, NULL if fails
 */
-typedef bool(*compare_function_t)(operand_list_t* left, operand_list_t* right);
+operand_list_t* list_append(operand_list_t** list, const char* dir, const char* filename);
 
 /*!
- * @brief get the function used for comparing
+	* @brief removes node if filename == filename
+	* @param filename node with this filename will be removed
 */
-compare_function_t get_compare_function(ls_flags flags);
+void list_remove_if(operand_list_t** list, const char* filename);
 
-
-///////////////////////
-// Compare functions //
-///////////////////////
-
-
-bool lexicographical_compare(operand_list_t* left, operand_list_t* right);
-bool reverse_lexicographical_compare(operand_list_t* left, operand_list_t* right);
-bool time_compare(operand_list_t* left, operand_list_t* right);
-bool no_sort(operand_list_t* left, operand_list_t* right);
+/*!
+	* @brief appends node to end of list
+	* @param list pointer to the list
+	* @param newNode node to append
+	* @return newNode
+*/
+operand_list_t* list_append_node(operand_list_t** list, operand_list_t* newNode);

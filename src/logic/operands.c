@@ -16,8 +16,10 @@
 /* ************************************************************************** */
 
 #include "ft_ls.h"
-#include "file.h"
-#include "sort.h"
+#include "logic/file.h"
+#include "logic/sort.h"
+#include "logic/operands.h"
+#include "utility/list.h"
 #include "libkm.h"
 #include "colorcodes.h"
 

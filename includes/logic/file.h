@@ -20,19 +20,24 @@
 #include "ft_ls.h"
 
 /*!
- * @brief sets all data for operands
- * @param operands -
- * @param flags -
- * @return LS_SUCCESS on success, anything else on error
+ * @brief -
+ * @param filename
+ * @return UNKNOWN_TYPE on failure
 */
-int set_operand_data(operand_list_t* operands, ls_flags flags);
+file_type get_file_type(struct stat statBuf);
 
 /*!
- * @brief splits operands into files and directories (by type)
- * @param operands -
- * @param files make sure it is empty and non NULL
- * @param directories make sure it is empty and non NULL 
- * 
- * NOTE: operands will be NULL after calling this
+ * @brief sets statInfo in operand and sets fileType
+ * @param operand -
+ * @return -
 */
-void split_operands(operand_list_t** operands, operand_list_t** files, operand_list_t** directories);
+ls_status set_stat_info(operand_list_t* operand, ls_flags flags);
+
+/*!
+ * @brief Gets all files in directory and sets their type
+ * @param dirName -
+ * @param flags -
+ * @param directory_files it will store all the files in the directory here
+ * @return directory files will be empty on error
+*/
+ls_status get_files_in_directory(const char* dirName, ls_flags flags, operand_list_t** directory_files);
