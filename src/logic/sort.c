@@ -22,7 +22,6 @@
 
 void sort(operand_list_t** list, ls_flags flags)
 {
-	// Use bubble sort to sort the list in ascending order
     bool swapped;
     operand_list_t* curr = NULL;
     operand_list_t* prev = NULL;

@@ -25,6 +25,7 @@ static void free_node(operand_list_t* node)
 	node->next = NULL;
 	free((void*)node->filename);
 	free((void*)node->path);
+	free((void*)node->symlinkDestination);
 	node->filename = NULL;
 	node->path = NULL;
 	free(node);

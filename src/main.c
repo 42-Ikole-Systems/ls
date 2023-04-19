@@ -20,6 +20,25 @@
 #include "logic/sort.h"
 #include "logic/operands.h"
 
+#include <stdlib.h>
+
+void run_leaks(const char* executableName)
+{
+	km_printf("\n");
+	const char* programname = km_strrchr(executableName, '/');
+	if (programname == NULL) {
+		programname = executableName;
+	}
+	else {
+		// skip '/'
+		programname++;
+	}
+	char* leaks = NULL;
+	km_sprintf(&leaks, "leaks %s | grep 'leaks for'", programname);
+	system(leaks);
+	free(leaks);
+}
+
 int main(int argc, const char** argv)
 {
 	ls_flags flags = 0x00;
@@ -40,18 +59,22 @@ int main(int argc, const char** argv)
 	}
 
 	status = set_operand_data(operands, flags);
-	if (status == LS_SUCCESS)
+	if (status != LS_SUCCESS)
 	{
-		operand_list_t* files = NULL;
-		operand_list_t* directories = NULL;
-		sort(&operands, flags);
-		split_operands(&operands, &files, &directories);
-
-		status = list_operands(files, directories, flags, 0);
-		clear_list(files);
-		clear_list(directories);
-		clear_list(operands);
+		return status;
 	}
 
+	operand_list_t* files = NULL;
+	operand_list_t* directories = NULL;
+	sort(&operands, flags);
+	split_operands(&operands, &files, &directories);
+
+	status = list_operands(files, directories, flags, 0);
+	clear_list(files);
+	clear_list(directories);
+
+	#ifdef LEAKS
+		run_leaks(argv[0]);
+	#endif
 	return status;
 }
