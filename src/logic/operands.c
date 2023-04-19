@@ -184,8 +184,7 @@ static char* get_time(const operand_list_t* node)
 	const char* yearTime = (node->time < currentTime - elevenMonths) ? year : timeString;
 
 	char* result = NULL;
-	if (km_sprintf(&result , "%.2s %s %.5s", dayNumber, month, yearTime) < 0) {
-		free(result);
+	if (km_sprintf(&result , "%s %2s %.5s", month, dayNumber, yearTime) < 0) {
 		return NULL;
 	}
 
