@@ -32,18 +32,23 @@
 
 ls_status set_operand_data(operand_list_t** operands, ls_flags flags)
 {
-	for (operand_list_t* node = *operands; node != NULL; node = node->next)
+	for (operand_list_t* node = *operands; node != NULL; )
 	{
 		ls_status status = set_stat_info(node, flags);
-		if (status == LS_MINOR_ERROR) {
+		if (status == LS_MINOR_ERROR)
+		{
+			operand_list_t* next = node->next;
 			list_remove_if(operands, node->filename);
+			node = next;
 			status = LS_SUCCESS;
+			continue ;
 		}
 		if (status != LS_SUCCESS)
 		{
 			clear_list(*operands);
 			return status;
 		}
+		node = node->next;
 	}
 	if (*operands == NULL) {
 		return LS_MINOR_ERROR;

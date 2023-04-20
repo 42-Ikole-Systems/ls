@@ -28,6 +28,7 @@ static void free_node(operand_list_t* node)
 	free((void*)node->symlinkDestination);
 	node->filename = NULL;
 	node->path = NULL;
+	node->symlinkDestination = NULL;
 	free(node);
 }
 
