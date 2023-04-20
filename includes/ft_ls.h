@@ -34,17 +34,17 @@
 
 	typedef struct s_ls_flags
 	{
-		int hidden_directories			: 1; // include hidden directories
-		int long_format					: 1; // long format
-		int recursive					: 1; // Recusively list subdirectories
-		int reverse_lexi_sort			: 1; // reverse lexicographical sort
-		int time_sort					: 1; // sort by time modified
-		int use_access_time				: 1; // Use time of last access, instead of last modification of the file for sorting and in long format.
-		int no_sort						: 1; // Output is not sorted.  This option turns on the -a option.
-		int display_groupname			: 1; // display the group name in the long (-l) format output (the owner name is suppressed).
-		int display_directory_as_file	: 1; // Directories are listed as plain files (not searched recursively).
-		int colorised_output			: 1; // Gives the output Beautiful colors :D
-	} ls_flags;;
+		int hidden_directories			: 1; // [a] include hidden directories
+		int long_format					: 1; // [l] long format
+		int recursive					: 1; // [R] Recusively list subdirectories
+		int reverse_lexi_sort			: 1; // [r] reverse lexicographical sort
+		int time_sort					: 1; // [t] sort by time modified
+		int use_access_time				: 1; // [u] Use time of last access, instead of last modification of the file for sorting and in long format.
+		int no_sort						: 1; // [f] Output is not sorted.  This option turns on the -a option.
+		int display_groupname			: 1; // [g] display the group name in the long (-l) format output (the owner name is suppressed).
+		int display_directory_as_file	: 1; // [d] Directories are listed as plain files (not searched recursively).
+		int colorised_output			: 1; // [G] Gives the output Beautiful colors :D
+	} ls_flags;
 
 	#define ALLOWED_LS_FLAGS "alRrtufgdG"
 
