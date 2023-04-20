@@ -60,13 +60,13 @@ void sort(operand_list_t** list, ls_flags flags)
 
 compare_function_t get_compare_function(ls_flags flags)
 {
-	if (flags & flag_no_sort) {
+	if (flags.no_sort) {
 		return no_sort;
 	}
-	if (flags & flag_reverse_lexi_sort) {
+	if (flags.reverse_lexi_sort) {
 		return reverse_lexicographical_compare;
 	}
-	if (flags & flag_time_sort) {
+	if (flags.time_sort) {
 		return time_compare;
 	}
 	return lexicographical_compare;

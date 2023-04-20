@@ -141,8 +141,12 @@ static size_t get_hard_links(const operand_list_t* node)
 /*!
  * @NOTE: DO NOT FREE returnvalue (static memory)
 */
-static const char* get_owner_name(const operand_list_t* node)
+static const char* get_owner_name(const operand_list_t* node, ls_flags flags)
 {
+	if (flags.display_groupname) {
+		return "";
+	}
+
 	struct passwd* pw = getpwuid(node->statInfo.st_uid);
 	if (pw == NULL) {
 		return NULL;
@@ -262,7 +266,7 @@ static bool is_executable(const operand_list_t* file)
 static char* get_filename(const operand_list_t* file, ls_flags flags)
 {
 	char* filename = NULL;
-	if (flags & flag_colorised_output)
+	if (flags.colorised_output)
 	{
 		char* color = "";
 		switch (file->type)
@@ -321,12 +325,12 @@ static ls_status print_files(const operand_list_t* files, ls_flags flags)
 	// files
 	for (const operand_list_t* node = files; status == LS_SUCCESS && node != NULL; node = node->next)
 	{
-		if (flags & flag_long_format)
+		if (flags.long_format)
 		{
 			const char entryType = get_entry_type(node); // entry type
 			const char* fileMode = get_file_mode(node); // File mode (permissions)
 			const size_t hardLinks = get_hard_links(node); // Number of hard links
-			const char* ownerName = get_owner_name(node); // Owner name (or ID)
+			const char* ownerName = get_owner_name(node, flags); // Owner name (or ID)
 			const char* groupName = get_group_name(node); // Group name (or ID)
 			const size_t filesize = get_filesize(node); // File size (in bytes)
 			const char* fileTime = get_time(node); // Date and time of last modification !! MUST BE FREED !!
@@ -424,7 +428,7 @@ static ls_status list_directories(const operand_list_t* directories, ls_flags fl
 			status = print_files(directoryEntries, flags);
 		}
 
-		if (status == LS_SUCCESS && flags & flag_recursive) {
+		if (status == LS_SUCCESS && flags.recursive) {
 			status = list_subdirectories(&directoryEntries, flags, depth);
 		}
 		clear_list(directoryEntries);

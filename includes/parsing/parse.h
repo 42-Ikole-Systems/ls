@@ -25,7 +25,7 @@
  * @param token to check
  * @param flags variable to store found flags
  * 
- * @return the amount of flags found, -1 on error
+ * @return ls_status
 */
 ls_status parse_flags(const char* token, ls_flags* flags);
 

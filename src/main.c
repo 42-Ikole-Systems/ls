@@ -43,7 +43,8 @@ void run_leaks(const char* executableName)
 
 int main(int argc, const char** argv)
 {
-	ls_flags flags = 0x00;
+	ls_flags flags;
+	km_bzero(&flags, sizeof(ls_flags));
 	operand_list_t* operands = NULL;
 	ls_status status = LS_SUCCESS;
 

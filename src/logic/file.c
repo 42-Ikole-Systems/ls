@@ -27,7 +27,7 @@
 file_type get_file_type(struct stat statBuf, ls_flags flags)
 {
 	// Check the file type
-	if (S_ISREG(statBuf.st_mode) || flags & flag_display_directory_as_file) {
+	if (S_ISREG(statBuf.st_mode) || flags.display_directory_as_file) {
 		return regular_file_type;
 	}
 	else if (S_ISDIR(statBuf.st_mode)) {
@@ -96,7 +96,7 @@ ls_status set_stat_info(operand_list_t* operand, ls_flags flags)
 		return LS_SERIOUS_ERROR;
 	}
 
-	operand->time = (flags & flag_use_access_time) ? operand->statInfo.st_atime : operand->statInfo.st_mtime;
+	operand->time = (flags.use_access_time) ? operand->statInfo.st_atime : operand->statInfo.st_mtime;
 	return status;
 }
 
@@ -117,7 +117,7 @@ ls_status get_files_in_directory(const char* dirName, ls_flags flags, operand_li
     // Read each entry in directory
     while ((entry = readdir(dir)) != NULL && status == LS_SUCCESS)
 	{
-		if ((flags & flag_hidden_directories) == false && entry->d_name[0] == '.') {
+		if ((flags.hidden_directories) == false && entry->d_name[0] == '.') {
 			continue ; // skip hidden directories
 		}
 		operand_list_t* currentOperand = list_append(directory_files, dirName, entry->d_name);

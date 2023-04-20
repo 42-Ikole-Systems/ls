@@ -32,20 +32,19 @@
 		LS_SERIOUS_ERROR = 2
 	} ls_status;
 
-	typedef enum e_ls_flags
+	typedef struct s_ls_flags
 	{
-		flag_unknown = 0x00,
-		flag_hidden_directories			= 0x01,  // [a] 0000 0000 0000 0000 0000 0001 (include hidden directories)
-		flag_long_format				= 0x02,  // [l] 0000 0000 0000 0000 0000 0010 (long format)
-		flag_recursive					= 0x04,  // [R] 0000 0000 0000 0000 0000 0100 (Recusively list subdirectories)
-		flag_reverse_lexi_sort			= 0x08,  // [r] 0000 0000 0000 0000 0000 1000 (reverse lexicographical sort)
-		flag_time_sort					= 0x10,  // [t] 0000 0000 0000 0000 0001 0000 (sort by time modified)
-		flag_use_access_time			= 0x20,  // [u] 0000 0000 0000 0000 0010 0000 (Use time of last access, instead of last modification of the file for sorting and in long format).
-		flag_no_sort					= 0x41,  // [f] 0000 0000 0000 0000 0100 0001 (Output is not sorted.  This option turns on the -a option.)
-		flag_display_groupname			= 0x82,  // [g] 0000 0000 0000 0000 1000 0010 (display the group name in the long (-l) format output (the owner name is suppressed).)
-		flag_display_directory_as_file	= 0x100, // [d] 0000 0000 0000 0001 0000 0000 (Directories are listed as plain files (not searched recursively).)
-		flag_colorised_output			= 0x200, // [G] 0000 0000 0000 0010 0000 0000 (Gives the output Beautiful colors :D)
-	} ls_flags;
+		int hidden_directories			: 1; // include hidden directories
+		int long_format					: 1; // long format
+		int recursive					: 1; // Recusively list subdirectories
+		int reverse_lexi_sort			: 1; // reverse lexicographical sort
+		int time_sort					: 1; // sort by time modified
+		int use_access_time				: 1; // Use time of last access, instead of last modification of the file for sorting and in long format.
+		int no_sort						: 1; // Output is not sorted.  This option turns on the -a option.
+		int display_groupname			: 1; // display the group name in the long (-l) format output (the owner name is suppressed).
+		int display_directory_as_file	: 1; // Directories are listed as plain files (not searched recursively).
+		int colorised_output			: 1; // Gives the output Beautiful colors :D
+	} ls_flags;;
 
 	#define ALLOWED_LS_FLAGS "alRrtufgdG"
 
