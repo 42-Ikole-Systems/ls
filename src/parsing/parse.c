@@ -38,7 +38,7 @@ ls_status parse(int argc, const char** argv, ls_flags* flags, operand_list_t** o
 	int i = 1;
 
 	// parse flags first
-	for (; status == LS_SUCCESS && i < argc && argv[i][0] == '-'; i++)
+	for (; status == LS_SUCCESS && i < argc && argv[i][0] == '-' && argv[i][1]; i++)
 	{
 		status = parse_flags(argv[i], flags);
 	}
