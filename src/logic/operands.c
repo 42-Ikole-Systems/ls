@@ -422,9 +422,13 @@ static ls_status list_directories(const operand_list_t* directories, ls_flags fl
 		operand_list_t* directoryEntries = NULL;
 		status = get_files_in_directory(node->path, flags, &directoryEntries);
 		
-		if (status == LS_SUCCESS) {
+		if (status == LS_SUCCESS)
+		{
 			sort(&directoryEntries, flags);
-			status = list_total_blocks(directoryEntries);
+
+			if (flags.long_format) {
+				status = list_total_blocks(directoryEntries);
+			}
 		}
 
 		if (status == LS_SUCCESS) {
