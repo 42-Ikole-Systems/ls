@@ -22,20 +22,27 @@ static bool get_flag(ls_flags* flags, char c)
 {
 	switch (c)
 	{
-		case 'a': flags->hidden_directories = true; break;
-		case 'l': flags->long_format = true; break;
-		case 'R': flags->recursive = true; break;
-		case 'r': flags->reverse_lexi_sort = true; break;
-		case 't': flags->time_sort = true; break;
-		case 'u': flags->use_access_time = true; break;
-		case 'f': flags->no_sort = true; break;
-		case 'g': flags->display_groupname = true; break;
-		case 'd': flags->display_directory_as_file = true; break;
-		case 'G': flags->colorised_output = true; break;
+		case 'a': return (flags->hidden_directories = true);
+		case 'l': return (flags->long_format = true);
+		case 'R': return (flags->recursive = true);
+		case 'r': return (flags->reverse_lexi_sort = true);
+		case 't': return (flags->time_sort = true);
+		case 'u': return (flags->use_access_time = true);
+		case 'f': {
+			flags->no_sort = true;
+			flags->hidden_directories = true;
+			return true;
+		}
+		case 'g': {
+			flags->display_groupname = true;
+			flags->long_format = true;
+			return true;
+		}
+		case 'd': return (flags->display_directory_as_file = true);
+		case 'G': return (flags->colorised_output = true);
 		default:
 			return false;
 	}
-	return true;
 }
 
 ls_status parse_flags(const char* token, ls_flags* flags)

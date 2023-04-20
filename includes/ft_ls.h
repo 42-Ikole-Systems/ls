@@ -41,7 +41,7 @@
 		int time_sort					: 1; // [t] sort by time modified
 		int use_access_time				: 1; // [u] Use time of last access, instead of last modification of the file for sorting and in long format.
 		int no_sort						: 1; // [f] Output is not sorted.  This option turns on the -a option.
-		int display_groupname			: 1; // [g] display the group name in the long (-l) format output (the owner name is suppressed).
+		int display_groupname			: 1; // [g] display the group name in the long (-l) format output (the owner name is suppressed and long format is turned on).
 		int display_directory_as_file	: 1; // [d] Directories are listed as plain files (not searched recursively).
 		int colorised_output			: 1; // [G] Gives the output Beautiful colors :D
 	} ls_flags;
