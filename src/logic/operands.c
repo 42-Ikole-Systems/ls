@@ -328,6 +328,7 @@ static ls_status print_files(const operand_list_t* files, ls_flags flags)
 	// files
 	for (const operand_list_t* node = files; status == LS_SUCCESS && node != NULL; node = node->next)
 	{
+		const char* filename = get_filename(node, flags); // !! MUST BE FREEED !!
 		if (flags.long_format)
 		{
 			const char entryType = get_entry_type(node); // entry type
@@ -337,7 +338,6 @@ static ls_status print_files(const operand_list_t* files, ls_flags flags)
 			const char* groupName = get_group_name(node); // Group name (or ID)
 			const size_t filesize = get_filesize(node); // File size (in bytes)
 			const char* fileTime = get_time(node); // Date and time of last modification !! MUST BE FREED !!
-			const char* filename = get_filename(node, flags); // !! MUST BE FREEED !!
 
 			if (ownerName == NULL || groupName == NULL || fileTime == NULL || filename == NULL)
 			{
@@ -363,16 +363,16 @@ static ls_status print_files(const operand_list_t* files, ls_flags flags)
 				status = LS_SERIOUS_ERROR;
 			}
 
-			free((void*)filename);
 			free((void*)fileTime);
 		}
 		else
 		{
 			const char whitespace = (node->next != NULL) ? '\t' : '\n';
-			if (km_printf("%s%c", node->filename, whitespace) < 0) {
+			if (km_printf("%s%c", filename, whitespace) < 0) {
 				status = LS_SERIOUS_ERROR;
 			}
 		}
+		free((void*)filename);
 	}
 	return status;
 }
