@@ -61,7 +61,7 @@ int main(int argc, const char** argv)
 		}
 	}
 
-	status = set_operand_data(operands, flags);
+	status = set_operand_data(&operands, flags);
 	if (status != LS_SUCCESS) {
 		return status;
 	}

@@ -30,20 +30,23 @@
 #include <assert.h>
 #include <stdlib.h>
 
-ls_status set_operand_data(operand_list_t* operands, ls_flags flags)
+ls_status set_operand_data(operand_list_t** operands, ls_flags flags)
 {
-	for (operand_list_t* node = operands; node != NULL; node = node->next)
+	for (operand_list_t* node = *operands; node != NULL; node = node->next)
 	{
 		ls_status status = set_stat_info(node, flags);
 		if (status == LS_MINOR_ERROR) {
-			list_remove_if(&operands, node->filename);
+			list_remove_if(operands, node->filename);
 			status = LS_SUCCESS;
 		}
 		if (status != LS_SUCCESS)
 		{
-			clear_list(operands);
+			clear_list(*operands);
 			return status;
 		}
+	}
+	if (*operands == NULL) {
+		return LS_MINOR_ERROR;
 	}
 	return LS_SUCCESS;
 }

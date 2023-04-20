@@ -25,7 +25,7 @@
  * @param flags -
  * @return LS_SUCCESS on success, anything else on error
 */
-ls_status set_operand_data(operand_list_t* operands, ls_flags flags);
+ls_status set_operand_data(operand_list_t** operands, ls_flags flags);
 
 /*!
  * @brief splits operands into files and directories (by type)
