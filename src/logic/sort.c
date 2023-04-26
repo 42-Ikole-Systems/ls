@@ -16,7 +16,7 @@
 /* ************************************************************************** */
 
 #include "logic/sort.h"
-#include "libkm.h"
+#include "libkm/string.h"
 
 #include <stdlib.h>
 

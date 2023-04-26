@@ -17,7 +17,7 @@
 
 #include "parsing/parse.h"
 #include "utility/list.h"
-#include "libkm.h"
+#include "libkm/io/printf.h"
 
 #include <ctype.h>
 

@@ -20,8 +20,9 @@
 #include "logic/sort.h"
 #include "logic/operands.h"
 #include "utility/list.h"
-#include "libkm.h"
-#include "colorcodes.h"
+#include "libkm/io/printf.h"
+#include "libkm/colorcodes.h"
+#include "libkm/string.h"
 
 #include <unistd.h>
 #include <pwd.h>

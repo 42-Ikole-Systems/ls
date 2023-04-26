@@ -16,7 +16,8 @@
 /* ************************************************************************** */
 
 #include "parsing/parse.h"
-#include "libkm.h"
+#include "libkm/string.h"
+#include "libkm/io/printf.h"
 
 #include <stdlib.h>
 

@@ -16,7 +16,7 @@
 /* ************************************************************************** */
 
 #include "ft_ls.h"
-#include "libkm.h"
+#include "libkm/io/printf.h"
 
 static bool get_flag(ls_flags* flags, char c)
 {

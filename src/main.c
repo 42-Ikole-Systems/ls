@@ -16,7 +16,9 @@
 /* ************************************************************************** */
 
 #include "ft_ls.h"
-#include "libkm.h"
+#include "libkm/io/printf.h"
+#include "libkm/string.h"
+#include "libkm/memory.h"
 #include "logic/sort.h"
 #include "logic/operands.h"
 #include "parsing/parse.h"

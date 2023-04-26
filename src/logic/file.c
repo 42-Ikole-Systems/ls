@@ -16,7 +16,8 @@
 /* ************************************************************************** */
 
 #include "ft_ls.h"
-#include "libkm.h"
+#include "libkm/io/printf.h"
+#include "libkm/string.h"
 #include "utility/list.h"
 
 #include <stdio.h>
