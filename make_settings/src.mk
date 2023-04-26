@@ -4,7 +4,7 @@ SRC_MK = 1
 SRC :=	main.c \
 		parsing/flags.c \
 		parsing/parse.c \
-		utility/list.c \
+		utility/file.h \
 		logic/file.c \
 		logic/operands.c \
 		logic/sort.c

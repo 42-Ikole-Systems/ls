@@ -19,7 +19,6 @@
 #include "logic/file.h"
 #include "logic/sort.h"
 #include "logic/operands.h"
-#include "utility/list.h"
 #include "libkm/io/printf.h"
 #include "libkm/colorcodes.h"
 #include "libkm/string.h"
@@ -31,47 +30,46 @@
 #include <assert.h>
 #include <stdlib.h>
 
-ls_status set_operand_data(operand_list_t** operands, ls_flags flags)
+ls_status set_operand_data(km_vector_file* operands, ls_flags flags)
 {
-	for (operand_list_t* node = *operands; node != NULL; )
+	for (size_t i = 0; i < operands->size;)
 	{
-		ls_status status = set_stat_info(node, flags);
+		ls_file* file = km_vector_file_at(&operands, i);
+
+		ls_status status = set_stat_info(file, flags);
 		if (status == LS_MINOR_ERROR)
 		{
-			operand_list_t* next = node->next;
-			list_remove_if(operands, node->filename);
-			node = next;
+			km_vector_file_erase_position(&operands, i);
 			status = LS_SUCCESS;
 			continue ;
 		}
 		if (status != LS_SUCCESS)
 		{
-			clear_list(*operands);
+			km_vector_file_destroy(operands);
 			return status;
 		}
-		node = node->next;
+		i++;
 	}
-	if (*operands == NULL) {
+	if (km_vector_file_empty(&operands)) {
 		return LS_MINOR_ERROR;
 	}
 	return LS_SUCCESS;
 }
 
-void split_operands(operand_list_t** operands, operand_list_t** files, operand_list_t** directories)
+ls_status split_operands(km_vector_file* operands, km_vector_file* files, km_vector_file* directories)
 {
-	operand_list_t* node = *operands;
-	while (node != NULL)
+	for (size_t i = 0; i < operands->size; i++)
 	{
-		operand_list_t* tmp = node;
-		node = node->next;
-		if (tmp->type == directory_type) {
-			list_append_node(directories, tmp);
+		const ls_file* file = km_vector_file_at(operands, i); 
+		if (file->type == directory_type) {
+			km_vector_file_push_back(directories, *file);
 		}
 		else {
-			list_append_node(files, tmp);
+			km_vector_file_push_back(files, *file);
 		}
 	}
-	*operands = NULL;
+	operands->destroy_element = NULL; // dont do this at home kids
+	km_vector_file_destroy(operands);
 }
 
 static char get_entry_type(const operand_list_t* node)

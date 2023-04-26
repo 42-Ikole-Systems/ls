@@ -15,30 +15,13 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
-
 #include "ft_ls.h"
 
 /*!
- * @brief -
- * @param filename
- * @return UNKNOWN_TYPE on failure
+ * @brief creats a ls_file and appends it to files
+ * @param dir -
+ * @param filename - 
+ * @param files -
+ * @return LS_SUCCESS or LS_SERIOUS_ERROR
 */
-file_type get_file_type(struct stat statBuf);
-
-/*!
- * @brief sets statInfo in file and sets fileType
- * @param file -
- * @param flags -
- * @return -
-*/
-ls_status set_stat_info(ls_file* file, ls_flags flags);
-
-/*!
- * @brief Gets all files in directory and sets their type
- * @param dirName -
- * @param flags -
- * @param directory_files it will store all the files in the directory here
- * @return directory files will be empty on error
-*/
-ls_status get_files_in_directory(const char* dirName, ls_flags flags, operand_list_t** directory_files);
+ls_status add_file(const char* dir, const char* filename, km_vector_file* files);

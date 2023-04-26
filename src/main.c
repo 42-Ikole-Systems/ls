@@ -26,6 +26,8 @@
 
 #include <stdlib.h>
 
+REGISTER_KM_VECTOR_SOURCE(ls_file, file)
+
 void run_leaks(const char* executableName)
 {
 	km_printf("\n");
@@ -46,19 +48,21 @@ void run_leaks(const char* executableName)
 int main(int argc, const char** argv)
 {
 	ls_flags flags;
-	km_bzero(&flags, sizeof(ls_flags));
-	operand_list_t* operands = NULL;
+	km_vector_file operands;
 	ls_status status = LS_SUCCESS;
+
+	km_bzero(&flags, sizeof(ls_flags));
+	km_vector_file_initialise(&operands, NULL, NULL);
 
 	status = parse(argc, argv, &flags, &operands);
 	if (status != LS_SUCCESS) {
 		return status;
 	}
 
-	if (operands == NULL)
+	if (operands.size == 0)
 	{
 		// add current directory if no operand is given
-		if (list_append(&operands, NULL, ".") == NULL) {
+		if (add_file(NULL, ".", &operands) == NULL) {
 			return LS_SERIOUS_ERROR;
 		}
 	}

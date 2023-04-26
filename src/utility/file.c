@@ -15,38 +15,61 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
-
 #include "ft_ls.h"
 
-/*!
-* @brief deallocates and cleans up the list
-*
-* @param list -
-*/
-void clear_list(operand_list_t* list);
+static ls_status set_directory(ls_file* file, const char* dir, const char* filename)
+{
+	char* path = NULL;
 
-/*!
-* @brief creates and appends a new node to the end of the list
-*
-* @param list pointer to the list
-* @param dir will be copied
-* @param filename will be copied
-* 
-* @return newly apended node, NULL if fails
-*/
-operand_list_t* list_append(operand_list_t** list, const char* dir, const char* filename);
+	if (dir == NULL)
+	{
+		path = km_strdup(filename);
+		if (path == NULL)
+		{
+			return LS_SERIOUS_ERROR;
+		}
+	}
+	else
+	{
+		if (km_sprintf(&path, "%s/%s", dir, filename) < 0)
+		{
+			return LS_SERIOUS_ERROR;
+		}
+	}
+	file->path = path;
+	return LS_SUCCESS;
+}
 
-/*!
-	* @brief removes node if filename == filename
-	* @param filename node with this filename will be removed
-*/
-void list_remove_if(operand_list_t** list, const char* filename);
+static ls_status create_file(ls_file* file, const char* dir, const char* filename)
+{
+	ls_status status = LS_SUCCESS;
 
-/*!
-	* @brief appends node to end of list
-	* @param list pointer to the list
-	* @param newNode node to append
-	* @return newNode
-*/
-operand_list_t* list_append_node(operand_list_t** list, operand_list_t* newNode);
+	file->symlinkDestination = NULL;
+	file->time = 0;
+	file->filename = km_strdup(filename);
+	if (file->filename == NULL) {
+		return LS_SERIOUS_ERROR;
+	}
+	status = set_directory(file, dir, filename);
+	if (status != LS_SUCCESS)
+	{
+		free(file->filename);
+	}
+	return status;
+}
+
+ls_status add_file(const char* dir, const char* operand, km_vector_file* operands)
+{
+	ls_file file;
+
+	if (create_file(&file, dir, operands) != LS_SUCCESS)
+	{
+		return LS_SERIOUS_ERROR;
+	}
+	ls_file* newFile = km_vector_file_push_back(&operands, file);
+	if (newFile == NULL) {
+		return LS_SERIOUS_ERROR;
+	}
+	newFile->type = UNKNOWN_TYPE;
+	return LS_SUCCESS;
+}

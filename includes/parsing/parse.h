@@ -40,4 +40,4 @@ ls_status parse_flags(const char* token, ls_flags* flags);
  * 
  * @note it will ignore the first argument since this should be the name of the executable.
 */
-ls_status parse(int argc, const char** argv, ls_flags* flags, operand_list_t** operand_list);
+ls_status parse(int argc, const char** argv, ls_flags* flags, km_vector_file* operands);

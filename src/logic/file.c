@@ -16,9 +16,9 @@
 /* ************************************************************************** */
 
 #include "ft_ls.h"
+#include "utility/file.h"
 #include "libkm/io/printf.h"
 #include "libkm/string.h"
-#include "utility/list.h"
 
 #include <stdio.h>
 #include <dirent.h>
@@ -55,55 +55,54 @@ file_type get_file_type(struct stat statBuf, ls_flags flags)
 	}
 }
 
-static ls_status set_symlink_destination(operand_list_t* operand)
+static ls_status set_symlink_destination(ls_file* file)
 {
 	static const int bufferSize = PATH_MAX;
 	char buffer[bufferSize + 1];
 
-	ssize_t length = readlink(operand->path, buffer, bufferSize);
+	ssize_t length = readlink(file->path, buffer, bufferSize);
 	if (length < 0) {
-		perror(operand->path);
+		perror(file->path);
 		return LS_MINOR_ERROR;
 	}
 	buffer[length] = '\0';
-	operand->symlinkDestination = km_strdup(buffer);
-	if (operand->symlinkDestination == NULL) {
+	file->symlinkDestination = km_strdup(buffer);
+	if (file->symlinkDestination == NULL) {
 		return LS_SERIOUS_ERROR;
 	}
 
 	return LS_SUCCESS;
 }
 
-ls_status set_stat_info(operand_list_t* operand, ls_flags flags)
+ls_status set_stat_info(ls_file* file, ls_flags flags)
 {
 	struct stat statBuf;
 
 	 // Get file status
-	if (lstat(operand->path, &statBuf) == -1)
+	if (lstat(file->path, &statBuf) == -1)
 	{
-		perror(operand->path);
+		perror(file->path);
 		return LS_MINOR_ERROR;
 	}
-	operand->statInfo = statBuf;
+	file->statInfo = statBuf;
 
 	ls_status status = LS_SUCCESS;
-	operand->type = get_file_type(statBuf, flags);
-	if (operand->type == symlink_type)
+	file->type = get_file_type(statBuf, flags);
+	if (file->type == symlink_type)
 	{
-		status = set_symlink_destination(operand);
+		status = set_symlink_destination(file);
 	}
-	else if (operand->type == UNKNOWN_TYPE)
+	else if (file->type == UNKNOWN_TYPE)
 	{
 		return LS_SERIOUS_ERROR;
 	}
 
-	operand->time = (flags.use_access_time) ? operand->statInfo.st_atime : operand->statInfo.st_mtime;
+	file->time = (flags.use_access_time) ? file->statInfo.st_atime : file->statInfo.st_mtime;
 	return status;
 }
 
-ls_status get_files_in_directory(const char* dirName, ls_flags flags, operand_list_t** directory_files)
+ls_status get_files_in_directory(const char* dirName, ls_flags flags, km_vector_file* directory_files)
 {
-	*directory_files = NULL;
     DIR*			dir;
     struct dirent*	entry;
 
@@ -121,15 +120,14 @@ ls_status get_files_in_directory(const char* dirName, ls_flags flags, operand_li
 		if ((flags.hidden_directories) == false && entry->d_name[0] == '.') {
 			continue ; // skip hidden directories
 		}
-		operand_list_t* currentOperand = list_append(directory_files, dirName, entry->d_name);
-		if (currentOperand == NULL)
-		{
-			status = LS_SERIOUS_ERROR;
+		status = add_file(dirName, entry->d_name, directory_files);
+		if (status != LS_SUCCESS) {
+			
 			break ;
 		}
-		status = set_stat_info(currentOperand, flags);
+		status = set_stat_info(km_vector_file_back(directory_files), flags);
 		if (status == LS_MINOR_ERROR) {
-			list_remove_if(directory_files, entry->d_name);
+			km_vector_file_pop_back(directory_files);
 			status = LS_SUCCESS;
 		}
 	}
@@ -137,8 +135,7 @@ ls_status get_files_in_directory(const char* dirName, ls_flags flags, operand_li
 
 	if (status != LS_SUCCESS)
 	{
-		clear_list(*directory_files);
-		*directory_files = NULL;
+		km_vector_file_destroy(directory_files);
 	}
 
 	return status;
