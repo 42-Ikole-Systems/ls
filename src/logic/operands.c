@@ -85,6 +85,7 @@ ls_status split_operands(km_vector_file* operands, km_vector_file* files, km_vec
 	// since we did a shallow copy we do not want to destroy all the elements but just clear the vector
 	operands->destroy_element = NULL; // dont do this at home kids
 	km_vector_file_destroy(operands);
+	km_vector_file_initialise(operands, files->destroy_element, files->deep_copy); // bring it back to a working state
 	return LS_SUCCESS;
 }
 
@@ -410,7 +411,6 @@ static ls_status list_subdirectories(km_vector_file* directoryEntries, ls_flags 
 	if (status != LS_SUCCESS) {
 		return status;
 	}
-
 	remove_directory_indicators(&subdirDirs);
 
 	// recursively handle each subdirectory
@@ -436,6 +436,19 @@ static ls_status list_total_blocks(const km_vector_file* entries)
 	return LS_SUCCESS;
 }
 
+static ls_status print_directory_name(const km_vector_file* directories, const ls_file* file)
+{
+	if (files_printed(0) > 0 || directories->size > 1)
+	{
+		const char* newLine = (files_printed(0) == 0) ? "" : "\n";
+		if (km_printf("%s%s:\n", newLine, file->path) < 0) {
+			return LS_SERIOUS_ERROR;
+		}
+		add_file_printed();
+	}
+	return LS_SUCCESS;
+}
+
 static ls_status list_directories(const km_vector_file* directories, ls_flags flags)
 {
 	ls_status status = LS_SUCCESS;
@@ -444,12 +457,7 @@ static ls_status list_directories(const km_vector_file* directories, ls_flags fl
 	{
 		const ls_file* file = &(directories->arr[i]);
 
-		if (files_printed(0) > 0 || directories->size > 1) {
-			const char* newLine = (files_printed(0) == 0) ? "" : "\n";
-			if (km_printf("%s%s:\n", newLine, file->path) < 0) {
-				return LS_SERIOUS_ERROR;
-			}
-		}
+		print_directory_name(directories, file);		
 
 		km_vector_file directoryEntries;
 		km_vector_file_initialise(&directoryEntries, directories->destroy_element, directories->deep_copy);
@@ -480,8 +488,10 @@ ls_status list_operands(const km_vector_file* files, const km_vector_file* direc
 {
 	ls_status status = LS_SUCCESS;
 
-	status = print_files(files, flags);
-	if (status == LS_SUCCESS) {
+	if (files != NULL) {
+		status = print_files(files, flags);
+	}
+	if (status == LS_SUCCESS && directories != NULL) {
 		status = list_directories(directories, flags);
 	}
 	return status;
