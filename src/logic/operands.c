@@ -19,10 +19,11 @@
 #include "logic/file.h"
 #include "logic/sort.h"
 #include "logic/operands.h"
-#include "utility/list.h"
-#include "libkm/io/printf.h"
-#include "libkm/colorcodes.h"
-#include "libkm/string.h"
+#include "utility/file.h"
+
+#include <libkm/io/printf.h>
+#include <libkm/colorcodes.h>
+#include <libkm/string.h>
 
 #include <unistd.h>
 #include <pwd.h>
@@ -31,52 +32,66 @@
 #include <assert.h>
 #include <stdlib.h>
 
-ls_status set_operand_data(operand_list_t** operands, ls_flags flags)
+ls_status set_operand_data(km_vector_file* operands, ls_flags flags)
 {
-	for (operand_list_t* node = *operands; node != NULL; )
+	for (size_t i = 0; i < operands->size;)
 	{
-		ls_status status = set_stat_info(node, flags);
+		ls_file* file = km_vector_file_at(operands, i);
+
+		ls_status status = set_stat_info(file, flags);
 		if (status == LS_MINOR_ERROR)
 		{
-			operand_list_t* next = node->next;
-			list_remove_if(operands, node->filename);
-			node = next;
+			km_vector_file_erase_position(operands, i);
 			status = LS_SUCCESS;
 			continue ;
 		}
 		if (status != LS_SUCCESS)
 		{
-			clear_list(*operands);
+			km_vector_file_destroy(operands);
 			return status;
 		}
-		node = node->next;
+		i++;
 	}
-	if (*operands == NULL) {
+	if (km_vector_file_empty(operands)) {
 		return LS_MINOR_ERROR;
 	}
 	return LS_SUCCESS;
 }
 
-void split_operands(operand_list_t** operands, operand_list_t** files, operand_list_t** directories)
+ls_status split_operands(km_vector_file* operands, km_vector_file* files, km_vector_file* directories)
 {
-	operand_list_t* node = *operands;
-	while (node != NULL)
+	km_vector_file_initialise(files, operands->destroy_element, operands->deep_copy);
+	if (km_vector_file_reserve(files, operands->size) == false) {
+		km_vector_file_destroy(operands);
+		return LS_SERIOUS_ERROR;
+	}
+	km_vector_file_initialise(directories, operands->destroy_element, operands->deep_copy);
+	if (km_vector_file_reserve(directories, operands->size) == false) {
+		km_vector_file_destroy(files);
+		km_vector_file_destroy(operands);
+		return LS_SERIOUS_ERROR;
+	}
+	
+	for (size_t i = 0; i < operands->size; i++)
 	{
-		operand_list_t* tmp = node;
-		node = node->next;
-		if (tmp->type == directory_type) {
-			list_append_node(directories, tmp);
+		const ls_file* file = km_vector_file_at(operands, i); 
+		if (file->type == directory_type) {
+			km_vector_file_push_back(directories, *file);
 		}
 		else {
-			list_append_node(files, tmp);
+			km_vector_file_push_back(files, *file);
 		}
 	}
-	*operands = NULL;
+	// since we did a shallow copy we do not want to destroy all the elements but just clear the vector
+	operands->destroy_element = NULL; // dont do this at home kids
+	km_vector_file_destroy(operands);
+	km_vector_file_initialise(operands, files->destroy_element, files->deep_copy); // bring it back to a working state
+	return LS_SUCCESS;
 }
 
-static char get_entry_type(const operand_list_t* node)
+static char get_entry_type(const ls_file* file)
 {
-	switch (node->type)
+	switch (file->type)
 	{
 		case regular_file_type: return '-';
 		case directory_type: return 'd';
@@ -86,7 +101,7 @@ static char get_entry_type(const operand_list_t* node)
 		case fifo_type: return 'p';
 		case unix_socket_type: return 's';
 		default:
-			assert(node->type == UNKNOWN_TYPE);
+			assert(file->type == UNKNOWN_TYPE);
 			return '?';
 	}
 }
@@ -94,10 +109,10 @@ static char get_entry_type(const operand_list_t* node)
 /*!
  * @NOTE: DO NOT FREE returnvalue (static memory)
 */
-static const char* get_file_mode(const operand_list_t* node)
+static const char* get_file_mode(const ls_file* file)
 {
 	static char permissionString[10];
-	int filemode = node->statInfo.st_mode;
+	int filemode = file->statInfo.st_mode;
 
 	// owner permisison
 	permissionString[0] = (filemode & S_IRUSR) ? 'r' : '-';
@@ -142,21 +157,21 @@ static const char* get_file_mode(const operand_list_t* node)
 	return permissionString;
 }
 
-static size_t get_hard_links(const operand_list_t* node)
+static size_t get_hard_links(const ls_file* file)
 {
-	return (size_t)node->statInfo.st_nlink;
+	return (size_t)file->statInfo.st_nlink;
 }
 
 /*!
  * @NOTE: DO NOT FREE returnvalue (static memory)
 */
-static const char* get_owner_name(const operand_list_t* node, ls_flags flags)
+static const char* get_owner_name(const ls_file* file, ls_flags flags)
 {
 	if (flags.display_groupname) {
 		return "";
 	}
 
-	struct passwd* pw = getpwuid(node->statInfo.st_uid);
+	struct passwd* pw = getpwuid(file->statInfo.st_uid);
 	if (pw == NULL) {
 		return NULL;
 	}
@@ -166,23 +181,23 @@ static const char* get_owner_name(const operand_list_t* node, ls_flags flags)
 /*!
  * @NOTE: DO NOT FREE returnvalue (static memory)
 */
-static const char* get_group_name(const operand_list_t* node)
+static const char* get_group_name(const ls_file* file)
 {
-	struct group* gr = getgrgid(node->statInfo.st_gid);
+	struct group* gr = getgrgid(file->statInfo.st_gid);
 	if (gr == NULL) {
 		return NULL;
 	}
 	return gr->gr_name;
 }
 
-static size_t get_filesize(const operand_list_t* node)
+static size_t get_filesize(const ls_file* file)
 {
-	return (size_t)(node->statInfo.st_size);
+	return (size_t)(file->statInfo.st_size);
 }
 
-static char* get_time(const operand_list_t* node)
+static char* get_time(const ls_file* file)
 {
-	char* modifiedTimeString = ctime(&node->time); // DO NOT FREE
+	char* modifiedTimeString = ctime(&file->time); // DO NOT FREE
 	if (modifiedTimeString == NULL) {
 		return NULL;
 	}
@@ -196,7 +211,7 @@ static char* get_time(const operand_list_t* node)
 
 	const time_t currentTime = time(NULL);
 	const time_t elevenMonths = 11 * 30 * 24 * 60 * 60; // ~ not very precise but good enough
-	const char* yearTime = (node->time < currentTime - elevenMonths) ? year : timeString;
+	const char* yearTime = (file->time < currentTime - elevenMonths) ? year : timeString;
 
 	char* result = NULL;
 	if (km_sprintf(&result , "%s %2s %.5s", month, dayNumber, yearTime) < 0) {
@@ -206,25 +221,27 @@ static char* get_time(const operand_list_t* node)
 	return (result);
 }
 
-static size_t get_most_links(const operand_list_t* files)
+static size_t get_most_links(const km_vector_file* files)
 {
 	off_t links = 0;
-	for (const operand_list_t* node = files; node != NULL; node = node->next)
+	for (size_t i = 0; i < files->size; i++)
 	{
-		if (node->statInfo.st_nlink > links) {
-			links = node->statInfo.st_nlink;
+		const ls_file* file = &(files->arr[i]);
+		if (file->statInfo.st_nlink > links) {
+			links = file->statInfo.st_nlink;
 		}
 	}
 	return (size_t)links;
 }
 
-static size_t get_largest_file_size(const operand_list_t* files)
+static size_t get_largest_file_size(const km_vector_file* files)
 {
 	off_t largestFileSize = 0;
-	for (const operand_list_t* node = files; node != NULL; node = node->next)
+	for (size_t i = 0; i < files->size; i++)
 	{
-		if (node->statInfo.st_size > largestFileSize) {
-			largestFileSize = node->statInfo.st_size;
+		const ls_file* file = &(files->arr[i]);
+		if (file->statInfo.st_size > largestFileSize) {
+			largestFileSize = file->statInfo.st_size;
 		}
 	}
 	return (size_t)largestFileSize;
@@ -243,36 +260,19 @@ static int get_amount_of_characters(size_t n)
 	return amountOfCharacers;
 }
 
-static void remove_directory_indicators(operand_list_t** directories)
+static void remove_directory_indicators(km_vector_file* directories)
 {
-	list_remove_if(directories, ".");
-	list_remove_if(directories, "..");
+	erase_file_if_filename(directories, ".");
+	erase_file_if_filename(directories, "..");
 }
 
-static bool should_display_directory_name(const operand_list_t* files, const operand_list_t* directories, size_t depth)
-{
-	if (depth > 0) {
-		return true;
-	}
-	else if (files && directories) {
-		return true;
-	}
-	else if (!files && directories && directories->next) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-static bool is_executable(const operand_list_t* file)
+static bool is_executable(const ls_file* file)
 {
 	const int filemode = file->statInfo.st_mode;
 	return (filemode & S_IXUSR || filemode & S_IXGRP || filemode & S_IXOTH);
 }
 
-
-static char* get_filename(const operand_list_t* file, ls_flags flags)
+static char* get_filename(const ls_file* file, ls_flags flags)
 {
 	char* filename = NULL;
 	if (flags.colorised_output)
@@ -324,7 +324,26 @@ static char* get_filename(const operand_list_t* file, ls_flags flags)
 	}
 }
 
-static ls_status print_files(const operand_list_t* files, ls_flags flags)
+/*!
+ * @brief keeps track of how many files were printed, returns files listed from before call;
+ * @param amount the amount of files printed
+ * @return the amount of files printed
+*/
+static size_t files_printed(size_t amount)
+{
+	static size_t filesListed = 0;
+	size_t oldVal = filesListed;
+	filesListed += amount;
+
+	return oldVal;
+}
+
+static void add_file_printed()
+{
+	files_printed(1);
+}
+
+static ls_status print_files(const km_vector_file* files, ls_flags flags)
 {
 	ls_status status = LS_SUCCESS;
 
@@ -332,18 +351,19 @@ static ls_status print_files(const operand_list_t* files, ls_flags flags)
 	const int filesizeWidth = get_amount_of_characters(get_largest_file_size(files)) + 1;
 
 	// files
-	for (const operand_list_t* node = files; status == LS_SUCCESS && node != NULL; node = node->next)
+	for (size_t i = 0; status == LS_SUCCESS && i < files->size; i++)
 	{
-		const char* filename = get_filename(node, flags); // !! MUST BE FREEED !!
+		const ls_file* file = &(files->arr[i]);
+		const char* filename = get_filename(file, flags); // !! MUST BE FREEED !!
 		if (flags.long_format)
 		{
-			const char entryType = get_entry_type(node); // entry type
-			const char* fileMode = get_file_mode(node); // File mode (permissions)
-			const size_t hardLinks = get_hard_links(node); // Number of hard links
-			const char* ownerName = get_owner_name(node, flags); // Owner name (or ID)
-			const char* groupName = get_group_name(node); // Group name (or ID)
-			const size_t filesize = get_filesize(node); // File size (in bytes)
-			const char* fileTime = get_time(node); // Date and time of last modification !! MUST BE FREED !!
+			const char entryType = get_entry_type(file); // entry type
+			const char* fileMode = get_file_mode(file); // File mode (permissions)
+			const size_t hardLinks = get_hard_links(file); // Number of hard links
+			const char* ownerName = get_owner_name(file, flags); // Owner name (or ID)
+			const char* groupName = get_group_name(file); // Group name (or ID)
+			const size_t filesize = get_filesize(file); // File size (in bytes)
+			const char* fileTime = get_time(file); // Date and time of last modification !! MUST BE FREED !!
 
 			if (ownerName == NULL || groupName == NULL || fileTime == NULL || filename == NULL)
 			{
@@ -368,12 +388,12 @@ static ls_status print_files(const operand_list_t* files, ls_flags flags)
 			{
 				status = LS_SERIOUS_ERROR;
 			}
-
+			add_file_printed();
 			free((void*)fileTime);
 		}
 		else
 		{
-			const char whitespace = (node->next != NULL) ? '\t' : '\n';
+			const char whitespace = (i + 1 == files->size) ? '\n' : '\t';
 			if (km_printf("%s%c", filename, whitespace) < 0) {
 				status = LS_SERIOUS_ERROR;
 			}
@@ -383,28 +403,32 @@ static ls_status print_files(const operand_list_t* files, ls_flags flags)
 	return status;
 }
 
-static ls_status list_subdirectories(operand_list_t** directoryEntries, ls_flags flags, size_t depth)
+static ls_status list_subdirectories(km_vector_file* directoryEntries, ls_flags flags)
 {
-	operand_list_t* subdirFiles = NULL;
-	operand_list_t* subdirDirs = NULL;
-	split_operands(directoryEntries, &subdirFiles, &subdirDirs);
+	km_vector_file subdirFiles;
+	km_vector_file subdirDirs;
+	ls_status status = split_operands(directoryEntries, &subdirFiles, &subdirDirs);
+	if (status != LS_SUCCESS) {
+		return status;
+	}
 	remove_directory_indicators(&subdirDirs);
 
 	// recursively handle each subdirectory
-	ls_status status = list_operands(NULL, subdirDirs, flags, depth + 1);
+	status = list_operands(NULL, &subdirDirs, flags);
 
-	clear_list(subdirFiles);
-	clear_list(subdirDirs);
+	km_vector_file_destroy(&subdirFiles);
+	km_vector_file_destroy(&subdirDirs);
 
 	return status;
 }
 
-static ls_status list_total_blocks(const operand_list_t* entries)
+static ls_status list_total_blocks(const km_vector_file* entries)
 {
 	size_t total_blocks = 0;
-	for (const operand_list_t* node = entries; node != NULL; node = node->next)
+	for (size_t i = 0; i < entries->size; i++)
 	{
-		total_blocks += node->statInfo.st_blocks;
+		const ls_file* file = &(entries->arr[i]);
+		total_blocks += file->statInfo.st_blocks;
 	}
 	if (km_printf("total %llu\n", total_blocks) < 0) {
 		return LS_SERIOUS_ERROR;
@@ -412,51 +436,63 @@ static ls_status list_total_blocks(const operand_list_t* entries)
 	return LS_SUCCESS;
 }
 
-static ls_status list_directories(const operand_list_t* directories, ls_flags flags, bool displayDirectoryName, size_t depth)
+static ls_status print_directory_name(const km_vector_file* directories, const ls_file* file)
+{
+	if (files_printed(0) > 0 || directories->size > 1)
+	{
+		const char* newLine = (files_printed(0) == 0) ? "" : "\n";
+		if (km_printf("%s%s:\n", newLine, file->path) < 0) {
+			return LS_SERIOUS_ERROR;
+		}
+		add_file_printed();
+	}
+	return LS_SUCCESS;
+}
+
+static ls_status list_directories(const km_vector_file* directories, ls_flags flags)
 {
 	ls_status status = LS_SUCCESS;
 	// directory
-	for (const operand_list_t* node = directories; status != LS_SERIOUS_ERROR && node != NULL; node = node->next)
+	for (size_t i = 0; status != LS_SERIOUS_ERROR && i < directories->size; i++)
 	{
-		if (displayDirectoryName)
-		{
-			if (km_printf("\n%s:\n", node->path) < 0) {
-				return LS_SERIOUS_ERROR;
-			}
-		}
+		const ls_file* file = &(directories->arr[i]);
 
-		operand_list_t* directoryEntries = NULL;
-		status = get_files_in_directory(node->path, flags, &directoryEntries);
+		print_directory_name(directories, file);		
+
+		km_vector_file directoryEntries;
+		km_vector_file_initialise(&directoryEntries, directories->destroy_element, directories->deep_copy);
+		status = get_files_in_directory(file->path, flags, &directoryEntries);
 		
 		if (status == LS_SUCCESS)
 		{
 			sort(&directoryEntries, flags);
 
 			if (flags.long_format) {
-				status = list_total_blocks(directoryEntries);
+				status = list_total_blocks(&directoryEntries);
 			}
 		}
 
 		if (status == LS_SUCCESS) {
-			status = print_files(directoryEntries, flags);
+			status = print_files(&directoryEntries, flags);
 		}
 
 		if (status == LS_SUCCESS && flags.recursive) {
-			status = list_subdirectories(&directoryEntries, flags, depth);
+			status = list_subdirectories(&directoryEntries, flags);
 		}
-		clear_list(directoryEntries);
+		km_vector_file_destroy(&directoryEntries);
 	}
 	return status;
 }
 
-ls_status list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags, size_t depth)
+ls_status list_operands(const km_vector_file* files, const km_vector_file* directories, ls_flags flags)
 {
 	ls_status status = LS_SUCCESS;
 
-	status = print_files(files, flags);
-	if (status == LS_SUCCESS) {
-		bool displayDirectoryName = should_display_directory_name(files, directories, depth);
-		status = list_directories(directories, flags, displayDirectoryName, depth);
+	if (files != NULL) {
+		status = print_files(files, flags);
+	}
+	if (status == LS_SUCCESS && directories != NULL) {
+		status = list_directories(directories, flags);
 	}
 	return status;
 }

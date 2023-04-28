@@ -15,38 +15,25 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
-
 #include "ft_ls.h"
 
 /*!
-* @brief deallocates and cleans up the list
-*
-* @param list -
+ * @brief creats a ls_file and appends it to files
+ * @param dir -
+ * @param filename - 
+ * @param files -
+ * @return LS_SUCCESS or LS_SERIOUS_ERROR
 */
-void clear_list(operand_list_t* list);
+ls_status add_file(const char* dir, const char* filename, km_vector_file* files);
 
 /*!
-* @brief creates and appends a new node to the end of the list
-*
-* @param list pointer to the list
-* @param dir will be copied
-* @param filename will be copied
-* 
-* @return newly apended node, NULL if fails
+ * @brief erses file that matches filename from files
+ * @param files -
+ * @param filename -
 */
-operand_list_t* list_append(operand_list_t** list, const char* dir, const char* filename);
+void erase_file_if_filename(km_vector_file* files, const char* filename);
 
 /*!
-	* @brief removes node if filename == filename
-	* @param filename node with this filename will be removed
+ * @brief deallocates and clears all data contained in the file
 */
-void list_remove_if(operand_list_t** list, const char* filename);
-
-/*!
-	* @brief appends node to end of list
-	* @param list pointer to the list
-	* @param newNode node to append
-	* @return newNode
-*/
-operand_list_t* list_append_node(operand_list_t** list, operand_list_t* newNode);
+void destroy_file(ls_file* file);

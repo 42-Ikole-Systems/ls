@@ -27,11 +27,12 @@
 file_type get_file_type(struct stat statBuf);
 
 /*!
- * @brief sets statInfo in operand and sets fileType
- * @param operand -
+ * @brief sets statInfo in file and sets fileType
+ * @param file -
+ * @param flags -
  * @return -
 */
-ls_status set_stat_info(operand_list_t* operand, ls_flags flags);
+ls_status set_stat_info(ls_file* file, ls_flags flags);
 
 /*!
  * @brief Gets all files in directory and sets their type
@@ -40,4 +41,4 @@ ls_status set_stat_info(operand_list_t* operand, ls_flags flags);
  * @param directory_files it will store all the files in the directory here
  * @return directory files will be empty on error
 */
-ls_status get_files_in_directory(const char* dirName, ls_flags flags, operand_list_t** directory_files);
+ls_status get_files_in_directory(const char* dirName, ls_flags flags, km_vector_file* directory_files);

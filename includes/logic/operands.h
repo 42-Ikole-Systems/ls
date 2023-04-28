@@ -25,23 +25,22 @@
  * @param flags -
  * @return LS_SUCCESS on success, anything else on error
 */
-ls_status set_operand_data(operand_list_t** operands, ls_flags flags);
+ls_status set_operand_data(km_vector_file* operands, ls_flags flags);
 
 /*!
  * @brief splits operands into files and directories (by type)
  * @param operands -
- * @param files make sure it is empty and non NULL
- * @param directories make sure it is empty and non NULL 
- * 
- * NOTE: operands will be NULL after calling this
+ * @param files make sure it has not been initialised
+ * @param directories make sure it has not been initialised 
+ *
+ * @NOTE: the operands vector will be destroyed after calling this function
 */
-void split_operands(operand_list_t** operands, operand_list_t** files, operand_list_t** directories);
+ls_status split_operands(km_vector_file* operands, km_vector_file* files, km_vector_file* directories);
 
 /*!
  * @brief handles listing of all files etc.
  * @param files will print all information about file
  * @param directories all entries will be listed (might be recursively)
  * @param flags -
- * @param depth when listing recursively contains recursion depth
 */
-ls_status list_operands(const operand_list_t* files, const operand_list_t* directories, ls_flags flags, size_t depth);
+ls_status list_operands(const km_vector_file* files, const km_vector_file* directories, ls_flags flags);

@@ -16,25 +16,16 @@
 /* ************************************************************************** */
 
 #include "parsing/parse.h"
-#include "utility/list.h"
+#include "utility/file.h"
+
 #include "libkm/io/printf.h"
+#include "libkm/string.h"
 
 #include <ctype.h>
 
-ls_status add_operand(const char* dir, const char* operand, operand_list_t** operand_list)
-{
-	operand_list_t* newNode = list_append(operand_list, dir, operand);
-	if (newNode == NULL) {
-		return LS_SERIOUS_ERROR;
-	}
-	newNode->type = UNKNOWN_TYPE;
-	return LS_SUCCESS;
-}
-
-ls_status parse(int argc, const char** argv, ls_flags* flags, operand_list_t** operand_list)
+ls_status parse(int argc, const char** argv, ls_flags* flags, km_vector_file* operands)
 {
 	ls_status status = LS_SUCCESS;
-	*operand_list = NULL;
 	int i = 1;
 
 	// parse flags first
@@ -45,11 +36,12 @@ ls_status parse(int argc, const char** argv, ls_flags* flags, operand_list_t** o
 	// parse operands next
 	for (; status == LS_SUCCESS && i < argc; i++)
 	{
-		status = add_operand(NULL, argv[i], operand_list);
+		status = add_file(NULL, argv[i], operands);
 	}
 
-	if (status != LS_SUCCESS) {
-		clear_list(*operand_list);
+	if (status != LS_SUCCESS) 
+	{
+		km_vector_file_destroy(operands);
 		km_printf("usage: ls [-%s] [file]\n", ALLOWED_LS_FLAGS);
 	}
 	return status;
