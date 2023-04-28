@@ -323,6 +323,25 @@ static char* get_filename(const ls_file* file, ls_flags flags)
 	}
 }
 
+/*!
+ * @brief keeps track of how many files were printed, returns files listed from before call;
+ * @param amount the amount of files printed
+ * @return the amount of files printed
+*/
+static size_t files_printed(size_t amount)
+{
+	static size_t filesListed = 0;
+	size_t oldVal = filesListed;
+	filesListed += amount;
+
+	return oldVal;
+}
+
+static void add_file_printed()
+{
+	files_printed(1);
+}
+
 static ls_status print_files(const km_vector_file* files, ls_flags flags)
 {
 	ls_status status = LS_SUCCESS;
@@ -368,12 +387,12 @@ static ls_status print_files(const km_vector_file* files, ls_flags flags)
 			{
 				status = LS_SERIOUS_ERROR;
 			}
-
+			add_file_printed();
 			free((void*)fileTime);
 		}
 		else
 		{
-			const char whitespace = (i + 1 == files->size) ? '\t' : '\n';
+			const char whitespace = (i + 1 == files->size) ? '\n' : '\t';
 			if (km_printf("%s%c", filename, whitespace) < 0) {
 				status = LS_SERIOUS_ERROR;
 			}
@@ -424,17 +443,20 @@ static ls_status list_directories(const km_vector_file* directories, ls_flags fl
 	for (size_t i = 0; status != LS_SERIOUS_ERROR && i < directories->size; i++)
 	{
 		const ls_file* file = &(directories->arr[i]);
+
+		if (files_printed(0) > 0 || directories->size > 1) {
+			const char* newLine = (files_printed(0) == 0) ? "" : "\n";
+			if (km_printf("%s%s:\n", newLine, file->path) < 0) {
+				return LS_SERIOUS_ERROR;
+			}
+		}
+
 		km_vector_file directoryEntries;
 		km_vector_file_initialise(&directoryEntries, directories->destroy_element, directories->deep_copy);
 		status = get_files_in_directory(file->path, flags, &directoryEntries);
 		
 		if (status == LS_SUCCESS)
 		{
-			if (km_printf("\n%s:\n", file->path) < 0) {
-				status = LS_SERIOUS_ERROR;
-				break ;
-			}
-
 			sort(&directoryEntries, flags);
 
 			if (flags.long_format) {
