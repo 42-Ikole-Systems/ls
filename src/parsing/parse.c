@@ -41,7 +41,7 @@ ls_status parse(int argc, const char** argv, ls_flags* flags, km_vector_file* op
 
 	if (status != LS_SUCCESS) 
 	{
-		km_vector_file_destroy(&operands);
+		km_vector_file_destroy(operands);
 		km_printf("usage: ls [-%s] [file]\n", ALLOWED_LS_FLAGS);
 	}
 	return status;

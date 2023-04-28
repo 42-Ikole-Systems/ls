@@ -20,43 +20,27 @@
 
 #include <stdlib.h>
 
-void sort(operand_list_t** list, ls_flags flags)
+void sort(km_vector_file* files, ls_flags flags)
 {
     bool swapped;
-    operand_list_t* curr = NULL;
-    operand_list_t* prev = NULL;
+	ls_file* arr = files->arr;
 
+	compare_function_t compare = get_compare_function(flags);
 
     do {
         swapped = false;
-        curr = *list;
-		compare_function_t compare = get_compare_function(flags);
-        while (curr && curr->next && curr->next != prev)
+		for (size_t i = 0; i + 1 < files->size; i++)
 		{
-            if (compare(curr, curr->next) == true)
+			if (compare(&(arr[i]), &(arr[i + 1])) == true)
 			{
-				operand_list_t tmp = *(curr->next);
-				if (prev == NULL)
-				{
-					*list = curr->next;
-					curr->next->next = curr;
-					curr->next = tmp.next;
-				}
-				else
-				{
-					prev->next = curr->next;
-					curr->next->next = curr;
-					curr->next = tmp.next;
-				}
-                swapped = true;
-            }
-			prev = curr;
-            curr = curr->next;
-        }
-		prev = NULL;
+				ls_file tmp = arr[i];
+				arr[i] = arr[i + 1];
+				arr[i + 1] = tmp;
+				swapped = true;
+			}
+		}
     } while (swapped);
 }
-
 
 compare_function_t get_compare_function(ls_flags flags)
 {
@@ -73,17 +57,17 @@ compare_function_t get_compare_function(ls_flags flags)
 }
 
 
-bool lexicographical_compare(operand_list_t* left, operand_list_t* right)
+bool lexicographical_compare(const ls_file* left, const ls_file* right)
 {
 	return (km_strcmp(left->filename, right->filename) > 0);
 }
 
-bool reverse_lexicographical_compare(operand_list_t* left, operand_list_t* right)
+bool reverse_lexicographical_compare(const ls_file* left, const ls_file* right)
 {
 	return lexicographical_compare(right, left);
 }
 
-bool time_compare(operand_list_t* left, operand_list_t* right)
+bool time_compare(const ls_file* left, const ls_file* right)
 {
 	if (left->time == right->time) {
 		return lexicographical_compare(left, right);
@@ -91,7 +75,7 @@ bool time_compare(operand_list_t* left, operand_list_t* right)
 	return (left->time < right->time);
 }
 
-bool no_sort(operand_list_t* left, operand_list_t* right)
+bool no_sort(const ls_file* left, const ls_file* right)
 {
 	(void)left;
 	(void)right;

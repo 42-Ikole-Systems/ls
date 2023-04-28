@@ -16,13 +16,14 @@
 /* ************************************************************************** */
 
 #include "ft_ls.h"
-#include "libkm/io/printf.h"
-#include "libkm/string.h"
-#include "libkm/memory.h"
 #include "logic/sort.h"
 #include "logic/operands.h"
 #include "parsing/parse.h"
-#include "utility/list.h"
+#include "utility/file.h"
+
+#include <libkm/io/printf.h>
+#include <libkm/string.h>
+#include <libkm/memory.h>
 
 #include <stdlib.h>
 
@@ -52,7 +53,7 @@ int main(int argc, const char** argv)
 	ls_status status = LS_SUCCESS;
 
 	km_bzero(&flags, sizeof(ls_flags));
-	km_vector_file_initialise(&operands, NULL, NULL);
+	km_vector_file_initialise(&operands, destroy_file, NULL);
 
 	status = parse(argc, argv, &flags, &operands);
 	if (status != LS_SUCCESS) {
@@ -62,8 +63,9 @@ int main(int argc, const char** argv)
 	if (operands.size == 0)
 	{
 		// add current directory if no operand is given
-		if (add_file(NULL, ".", &operands) == NULL) {
-			return LS_SERIOUS_ERROR;
+		status = add_file(NULL, ".", &operands);
+		if (status != LS_SUCCESS) {
+			return status;
 		}
 	}
 
@@ -72,14 +74,17 @@ int main(int argc, const char** argv)
 		return status;
 	}
 
-	operand_list_t* files = NULL;
-	operand_list_t* directories = NULL;
+	km_vector_file files;
+	km_vector_file directories;
 	sort(&operands, flags);
-	split_operands(&operands, &files, &directories);
+	status = split_operands(&operands, &files, &directories);
+	if (status != LS_SUCCESS) {
+		return status;
+	}
 
-	status = list_operands(files, directories, flags, 0);
-	clear_list(files);
-	clear_list(directories);
+	status = list_operands(&files, &directories, flags);
+	km_vector_file_destroy(&files);
+	km_vector_file_destroy(&directories);
 
 	#ifdef LEAKS
 		run_leaks(argv[0]);

@@ -22,13 +22,13 @@
 /*!
  * @brief sorts list based on what flags are set
 */
-void sort(operand_list_t** list, ls_flags flags);
+void sort(km_vector_file* files, ls_flags flags);
 
 /*!
  * @brief prototype for compare function
  * @return true if need to be swapped, false otherwise
 */
-typedef bool(*compare_function_t)(operand_list_t* left, operand_list_t* right);
+typedef bool(*compare_function_t)(const ls_file* left, const ls_file* right);
 
 /*!
  * @brief get the function used for comparing
@@ -39,8 +39,7 @@ compare_function_t get_compare_function(ls_flags flags);
 // Compare functions //
 ///////////////////////
 
-
-bool lexicographical_compare(operand_list_t* left, operand_list_t* right);
-bool reverse_lexicographical_compare(operand_list_t* left, operand_list_t* right);
-bool time_compare(operand_list_t* left, operand_list_t* right);
-bool no_sort(operand_list_t* left, operand_list_t* right);
+bool lexicographical_compare(const ls_file* left, const ls_file* right);
+bool reverse_lexicographical_compare(const ls_file* left, const ls_file* right);
+bool time_compare(const ls_file* left, const ls_file* right);
+bool no_sort(const ls_file* left, const ls_file* right);

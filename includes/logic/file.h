@@ -41,4 +41,4 @@ ls_status set_stat_info(ls_file* file, ls_flags flags);
  * @param directory_files it will store all the files in the directory here
  * @return directory files will be empty on error
 */
-ls_status get_files_in_directory(const char* dirName, ls_flags flags, operand_list_t** directory_files);
+ls_status get_files_in_directory(const char* dirName, ls_flags flags, km_vector_file* directory_files);
