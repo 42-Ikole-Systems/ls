@@ -24,10 +24,8 @@
  * 
  * @param token to check
  * @param flags variable to store found flags
- * 
- * @return ls_status
 */
-ls_status parse_flags(const char* token, ls_flags* flags);
+void parse_flags(const char* token, ls_flags* flags);
 
 /*!
  * @brief parses command line arguments
@@ -36,8 +34,6 @@ ls_status parse_flags(const char* token, ls_flags* flags);
  * @param argv the arguments
  * @param flags it will store the flags found in this variable
  *
- * @return true on success, false on error
- * 
  * @note it will ignore the first argument since this should be the name of the executable.
 */
-ls_status parse(int argc, const char** argv, ls_flags* flags, km_vector_file* operands);
+void parse(int argc, const char** argv, ls_flags* flags, km_vector_file* operands);

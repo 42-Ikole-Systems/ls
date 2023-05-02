@@ -5,6 +5,7 @@ SRC :=	main.c \
 		parsing/flags.c \
 		parsing/parse.c \
 		utility/file.c \
+		utility/status.c \
 		logic/file.c \
 		logic/operands.c \
 		logic/sort.c

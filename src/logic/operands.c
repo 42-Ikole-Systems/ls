@@ -32,44 +32,43 @@
 #include <assert.h>
 #include <stdlib.h>
 
-ls_status set_operand_data(km_vector_file* operands, ls_flags flags)
+void set_operand_data(km_vector_file* operands, ls_flags flags)
 {
 	for (size_t i = 0; i < operands->size;)
 	{
 		ls_file* file = km_vector_file_at(operands, i);
 
-		ls_status status = set_stat_info(file, flags);
-		if (status == LS_MINOR_ERROR)
+		set_stat_info(file, flags);
+		if (get_status() == LS_MINOR_ERROR)
 		{
 			km_vector_file_erase_position(operands, i);
-			status = LS_SUCCESS;
+			set_status(LS_SUCCESS);
 			continue ;
 		}
-		if (status != LS_SUCCESS)
+		if (!status_success())
 		{
 			km_vector_file_destroy(operands);
-			return status;
+			return ;
 		}
 		i++;
 	}
 	if (km_vector_file_empty(operands)) {
-		return LS_MINOR_ERROR;
+		set_status(LS_MINOR_ERROR);
 	}
-	return LS_SUCCESS;
 }
 
-ls_status split_operands(km_vector_file* operands, km_vector_file* files, km_vector_file* directories)
+void split_operands(km_vector_file* operands, km_vector_file* files, km_vector_file* directories)
 {
 	km_vector_file_initialise(files, operands->destroy_element, operands->deep_copy);
 	if (km_vector_file_reserve(files, operands->size) == false) {
 		km_vector_file_destroy(operands);
-		return LS_SERIOUS_ERROR;
+		return set_status(LS_SERIOUS_ERROR);
 	}
 	km_vector_file_initialise(directories, operands->destroy_element, operands->deep_copy);
 	if (km_vector_file_reserve(directories, operands->size) == false) {
 		km_vector_file_destroy(files);
 		km_vector_file_destroy(operands);
-		return LS_SERIOUS_ERROR;
+		return set_status(LS_SERIOUS_ERROR);
 	}
 	
 	for (size_t i = 0; i < operands->size; i++)
@@ -86,7 +85,6 @@ ls_status split_operands(km_vector_file* operands, km_vector_file* files, km_vec
 	operands->destroy_element = NULL; // dont do this at home kids
 	km_vector_file_destroy(operands);
 	km_vector_file_initialise(operands, files->destroy_element, files->deep_copy); // bring it back to a working state
-	return LS_SUCCESS;
 }
 
 static char get_entry_type(const ls_file* file)
@@ -343,15 +341,12 @@ static void add_file_printed()
 	files_printed(1);
 }
 
-static ls_status print_files(const km_vector_file* files, ls_flags flags)
+static void print_files(const km_vector_file* files, ls_flags flags)
 {
-	ls_status status = LS_SUCCESS;
-
 	const int hardlinkWidth = get_amount_of_characters(get_most_links(files)) + 1;
 	const int filesizeWidth = get_amount_of_characters(get_largest_file_size(files)) + 1;
 
-	// files
-	for (size_t i = 0; status == LS_SUCCESS && i < files->size; i++)
+	for (size_t i = 0; status_success() && i < files->size; i++)
 	{
 		const ls_file* file = &(files->arr[i]);
 		const char* filename = get_filename(file, flags); // !! MUST BE FREEED !!
@@ -367,11 +362,11 @@ static ls_status print_files(const km_vector_file* files, ls_flags flags)
 
 			if (ownerName == NULL || groupName == NULL || fileTime == NULL || filename == NULL)
 			{
-				status = LS_SERIOUS_ERROR;
+				set_status(LS_SERIOUS_ERROR);
 			}
 
 			static const int fileTimeWidth = 12; // ie: `12 Apr 13:15` || ` 12 Apr 2022`
-			if (status == LS_SUCCESS &&
+			if (status_success() &&
 				km_printf("%c%s %*llu %s %s %*llu %*s %s\n",
 					entryType, // %c
 					fileMode, // %s
@@ -386,7 +381,7 @@ static ls_status print_files(const km_vector_file* files, ls_flags flags)
 					filename // %s
 				) < 0)
 			{
-				status = LS_SERIOUS_ERROR;
+				set_status(LS_SERIOUS_ERROR);
 			}
 			add_file_printed();
 			free((void*)fileTime);
@@ -395,34 +390,31 @@ static ls_status print_files(const km_vector_file* files, ls_flags flags)
 		{
 			const char whitespace = (i + 1 == files->size) ? '\n' : '\t';
 			if (km_printf("%s%c", filename, whitespace) < 0) {
-				status = LS_SERIOUS_ERROR;
+				set_status(LS_SERIOUS_ERROR);
 			}
 		}
 		free((void*)filename);
 	}
-	return status;
 }
 
-static ls_status list_subdirectories(km_vector_file* directoryEntries, ls_flags flags)
+static void list_subdirectories(km_vector_file* directoryEntries, ls_flags flags)
 {
 	km_vector_file subdirFiles;
 	km_vector_file subdirDirs;
-	ls_status status = split_operands(directoryEntries, &subdirFiles, &subdirDirs);
-	if (status != LS_SUCCESS) {
-		return status;
+	split_operands(directoryEntries, &subdirFiles, &subdirDirs);
+	if (!status_success()) {
+		return ;
 	}
 	remove_directory_indicators(&subdirDirs);
 
 	// recursively handle each subdirectory
-	status = list_operands(NULL, &subdirDirs, flags);
+	list_operands(NULL, &subdirDirs, flags);
 
 	km_vector_file_destroy(&subdirFiles);
 	km_vector_file_destroy(&subdirDirs);
-
-	return status;
 }
 
-static ls_status list_total_blocks(const km_vector_file* entries)
+static void list_total_blocks(const km_vector_file* entries)
 {
 	size_t total_blocks = 0;
 	for (size_t i = 0; i < entries->size; i++)
@@ -431,68 +423,63 @@ static ls_status list_total_blocks(const km_vector_file* entries)
 		total_blocks += file->statInfo.st_blocks;
 	}
 	if (km_printf("total %llu\n", total_blocks) < 0) {
-		return LS_SERIOUS_ERROR;
+		set_status(LS_SERIOUS_ERROR);
 	}
-	return LS_SUCCESS;
 }
 
-static ls_status print_directory_name(const km_vector_file* directories, const ls_file* file)
+static void print_directory_name(const km_vector_file* directories, const ls_file* file)
 {
 	if (files_printed(0) > 0 || directories->size > 1)
 	{
 		const char* newLine = (files_printed(0) == 0) ? "" : "\n";
 		if (km_printf("%s%s:\n", newLine, file->path) < 0) {
-			return LS_SERIOUS_ERROR;
+			return set_status(LS_SERIOUS_ERROR);
 		}
 		add_file_printed();
 	}
-	return LS_SUCCESS;
 }
 
-static ls_status list_directories(const km_vector_file* directories, ls_flags flags)
+static void list_directories(const km_vector_file* directories, ls_flags flags)
 {
-	ls_status status = LS_SUCCESS;
-	// directory
-	for (size_t i = 0; status != LS_SERIOUS_ERROR && i < directories->size; i++)
+	for (size_t i = 0; get_status() != LS_SERIOUS_ERROR && i < directories->size; i++)
 	{
 		const ls_file* file = &(directories->arr[i]);
 
-		print_directory_name(directories, file);		
+		print_directory_name(directories, file);	
+		if (get_status() == LS_SERIOUS_ERROR) {
+			return ;
+		}	
 
 		km_vector_file directoryEntries;
 		km_vector_file_initialise(&directoryEntries, directories->destroy_element, directories->deep_copy);
-		status = get_files_in_directory(file->path, flags, &directoryEntries);
+		get_files_in_directory(file->path, flags, &directoryEntries);
 		
-		if (status == LS_SUCCESS)
+		if (status_success())
 		{
 			sort(&directoryEntries, flags);
 
 			if (flags.long_format) {
-				status = list_total_blocks(&directoryEntries);
+				list_total_blocks(&directoryEntries);
 			}
 		}
 
-		if (status == LS_SUCCESS) {
-			status = print_files(&directoryEntries, flags);
+		if (status_success()) {
+			print_files(&directoryEntries, flags);
 		}
 
-		if (status == LS_SUCCESS && flags.recursive) {
-			status = list_subdirectories(&directoryEntries, flags);
+		if (status_success() && flags.recursive) {
+			list_subdirectories(&directoryEntries, flags);
 		}
 		km_vector_file_destroy(&directoryEntries);
 	}
-	return status;
 }
 
-ls_status list_operands(const km_vector_file* files, const km_vector_file* directories, ls_flags flags)
+void list_operands(const km_vector_file* files, const km_vector_file* directories, ls_flags flags)
 {
-	ls_status status = LS_SUCCESS;
-
 	if (files != NULL) {
-		status = print_files(files, flags);
+		print_files(files, flags);
 	}
-	if (status == LS_SUCCESS && directories != NULL) {
-		status = list_directories(directories, flags);
+	if (status_success() && directories != NULL) {
+		list_directories(directories, flags);
 	}
-	return status;
 }

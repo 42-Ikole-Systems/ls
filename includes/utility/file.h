@@ -22,9 +22,8 @@
  * @param dir -
  * @param filename - 
  * @param files -
- * @return LS_SUCCESS or LS_SERIOUS_ERROR
 */
-ls_status add_file(const char* dir, const char* filename, km_vector_file* files);
+void add_file(const char* dir, const char* filename, km_vector_file* files);
 
 /*!
  * @brief erses file that matches filename from files

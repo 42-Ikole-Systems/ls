@@ -30,9 +30,8 @@ file_type get_file_type(struct stat statBuf);
  * @brief sets statInfo in file and sets fileType
  * @param file -
  * @param flags -
- * @return -
 */
-ls_status set_stat_info(ls_file* file, ls_flags flags);
+void set_stat_info(ls_file* file, ls_flags flags);
 
 /*!
  * @brief Gets all files in directory and sets their type

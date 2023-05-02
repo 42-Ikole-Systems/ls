@@ -15,31 +15,30 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
-
 #include "ft_ls.h"
 
-/*!
- * @brief sets all data for operands
- * @param operands -
- * @param flags -
-*/
-void set_operand_data(km_vector_file* operands, ls_flags flags);
+static ls_status current_status = LS_SUCCESS;
+static ls_status global_status = LS_SUCCESS;
 
-/*!
- * @brief splits operands into files and directories (by type)
- * @param operands -
- * @param files make sure it has not been initialised
- * @param directories make sure it has not been initialised 
- *
- * @NOTE: the operands vector will be destroyed after calling this function
-*/
-void split_operands(km_vector_file* operands, km_vector_file* files, km_vector_file* directories);
+ls_status get_status()
+{
+	return current_status;
+}
 
-/*!
- * @brief handles listing of all files etc.
- * @param files will print all information about file
- * @param directories all entries will be listed (might be recursively)
- * @param flags -
-*/
-void list_operands(const km_vector_file* files, const km_vector_file* directories, ls_flags flags);
+ls_status get_global_status()
+{
+	return global_status;
+}
+
+bool status_success()
+{
+	return current_status == LS_SUCCESS;
+}
+
+void set_status(ls_status status)
+{
+	if (status > global_status) {
+		global_status = status;
+	}
+	current_status = status;
+}

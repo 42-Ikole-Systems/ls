@@ -29,65 +29,54 @@
 
 REGISTER_KM_VECTOR_SOURCE(ls_file, file)
 
-void run_leaks(const char* executableName)
+void run_leaks()
 {
 	km_printf("\n");
-	const char* programname = km_strrchr(executableName, '/');
-	if (programname == NULL) {
-		programname = executableName;
-	}
-	else {
-		// skip '/'
-		programname++;
-	}
-	char* leaks = NULL;
-	km_sprintf(&leaks, "leaks %s | grep 'leaks for'", programname);
-	system(leaks);
-	free(leaks);
+	system("leaks ft_ls | grep 'leaks for'");
 }
 
 int main(int argc, const char** argv)
 {
+	#ifdef LEAKS
+		atexit(run_leaks);
+	#endif
+
 	ls_flags flags;
 	km_vector_file operands;
-	ls_status status = LS_SUCCESS;
 
 	km_bzero(&flags, sizeof(ls_flags));
 	km_vector_file_initialise(&operands, destroy_file, NULL);
 
-	status = parse(argc, argv, &flags, &operands);
-	if (status != LS_SUCCESS) {
-		return status;
+	parse(argc, argv, &flags, &operands);
+	if (!status_success()) {
+		return get_global_status();
 	}
 
 	if (operands.size == 0)
 	{
 		// add current directory if no operand is given
-		status = add_file(NULL, ".", &operands);
-		if (status != LS_SUCCESS) {
-			return status;
+		add_file(NULL, ".", &operands);
+		if (!status_success()) {
+			return get_global_status();
 		}
 	}
 
-	status = set_operand_data(&operands, flags);
-	if (status != LS_SUCCESS) {
-		return status;
+	set_operand_data(&operands, flags);
+	if (!status_success()) {
+		return get_global_status();
 	}
 
 	km_vector_file files;
 	km_vector_file directories;
 	sort(&operands, flags);
-	status = split_operands(&operands, &files, &directories);
-	if (status != LS_SUCCESS) {
-		return status;
+	split_operands(&operands, &files, &directories);
+	if (!status_success()) {
+		return get_global_status();
 	}
 
-	status = list_operands(&files, &directories, flags);
+	list_operands(&files, &directories, flags);
 	km_vector_file_destroy(&files);
 	km_vector_file_destroy(&directories);
 
-	#ifdef LEAKS
-		run_leaks(argv[0]);
-	#endif
-	return status;
+	return get_global_status();
 }

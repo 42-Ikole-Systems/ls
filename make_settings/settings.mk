@@ -3,7 +3,7 @@ SETTINGS_MK = 1
 
 NAME	= ft_ls
 
-CFLAGS	= -Wall -Wextra -Werror
+CFLAGS	= -Wall -Wextra -Werror -O3
 IFLAGS	= $(addprefix -I, $(IDIR))
 
 SDIR	= src
