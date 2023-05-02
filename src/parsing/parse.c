@@ -23,26 +23,24 @@
 
 #include <ctype.h>
 
-ls_status parse(int argc, const char** argv, ls_flags* flags, km_vector_file* operands)
+void parse(int argc, const char** argv, ls_flags* flags, km_vector_file* operands)
 {
-	ls_status status = LS_SUCCESS;
 	int i = 1;
 
 	// parse flags first
-	for (; status == LS_SUCCESS && i < argc && argv[i][0] == '-' && argv[i][1]; i++)
+	for (; status_success() && i < argc && argv[i][0] == '-' && argv[i][1]; i++)
 	{
-		status = parse_flags(argv[i], flags);
+		parse_flags(argv[i], flags);
 	}
 	// parse operands next
-	for (; status == LS_SUCCESS && i < argc; i++)
+	for (; status_success() && i < argc; i++)
 	{
-		status = add_file(NULL, argv[i], operands);
+		add_file(NULL, argv[i], operands);
 	}
 
-	if (status != LS_SUCCESS) 
+	if (!status_success()) 
 	{
 		km_vector_file_destroy(operands);
 		km_printf("usage: ls [-%s] [file]\n", ALLOWED_LS_FLAGS);
 	}
-	return status;
 }

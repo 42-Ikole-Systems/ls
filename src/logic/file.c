@@ -55,7 +55,7 @@ file_type get_file_type(struct stat statBuf, ls_flags flags)
 	}
 }
 
-static ls_status set_symlink_destination(ls_file* file)
+static void set_symlink_destination(ls_file* file)
 {
 	static const int bufferSize = PATH_MAX;
 	char buffer[bufferSize + 1];
@@ -63,18 +63,16 @@ static ls_status set_symlink_destination(ls_file* file)
 	ssize_t length = readlink(file->path, buffer, bufferSize);
 	if (length < 0) {
 		perror(file->path);
-		return LS_MINOR_ERROR;
+		return set_status(LS_MINOR_ERROR);
 	}
 	buffer[length] = '\0';
 	file->symlinkDestination = km_strdup(buffer);
 	if (file->symlinkDestination == NULL) {
-		return LS_SERIOUS_ERROR;
+		return set_status(LS_SERIOUS_ERROR);
 	}
-
-	return LS_SUCCESS;
 }
 
-ls_status set_stat_info(ls_file* file, ls_flags flags)
+void set_stat_info(ls_file* file, ls_flags flags)
 {
 	struct stat statBuf;
 
@@ -82,26 +80,24 @@ ls_status set_stat_info(ls_file* file, ls_flags flags)
 	if (lstat(file->path, &statBuf) == -1)
 	{
 		perror(file->path);
-		return LS_MINOR_ERROR;
+		return set_status(LS_MINOR_ERROR);
 	}
 	file->statInfo = statBuf;
 
-	ls_status status = LS_SUCCESS;
 	file->type = get_file_type(statBuf, flags);
 	if (file->type == symlink_type)
 	{
-		status = set_symlink_destination(file);
+		set_symlink_destination(file);
 	}
 	else if (file->type == UNKNOWN_TYPE)
 	{
-		return LS_SERIOUS_ERROR;
+		return set_status(LS_SERIOUS_ERROR);
 	}
 
 	file->time = (flags.use_access_time) ? file->statInfo.st_atime : file->statInfo.st_mtime;
-	return status;
 }
 
-ls_status get_files_in_directory(const char* dirName, ls_flags flags, km_vector_file* directory_files)
+void get_files_in_directory(const char* dirName, ls_flags flags, km_vector_file* directory_files)
 {
     DIR*			dir;
     struct dirent*	entry;
@@ -110,7 +106,7 @@ ls_status get_files_in_directory(const char* dirName, ls_flags flags, km_vector_
     if (dir == NULL)
 	{
         perror(dirName);
-        return LS_MINOR_ERROR;
+        return set_status(LS_MINOR_ERROR);
     }
 
 	ls_status status = LS_SUCCESS;
@@ -120,23 +116,20 @@ ls_status get_files_in_directory(const char* dirName, ls_flags flags, km_vector_
 		if ((flags.hidden_directories) == false && entry->d_name[0] == '.') {
 			continue ; // skip hidden directories
 		}
-		status = add_file(dirName, entry->d_name, directory_files);
-		if (status != LS_SUCCESS) {
-			
+		add_file(dirName, entry->d_name, directory_files);
+		if (!status_success()) {
 			break ;
 		}
-		status = set_stat_info(km_vector_file_back(directory_files), flags);
-		if (status == LS_MINOR_ERROR) {
+		set_stat_info(km_vector_file_back(directory_files), flags);
+		if (get_status() == LS_MINOR_ERROR) {
 			km_vector_file_pop_back(directory_files);
-			status = LS_SUCCESS;
+			set_status(LS_SUCCESS);
 		}
 	}
     closedir(dir);
 
-	if (status != LS_SUCCESS)
+	if (!status_success())
 	{
 		km_vector_file_destroy(directory_files);
 	}
-
-	return status;
 }
