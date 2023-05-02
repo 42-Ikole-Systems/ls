@@ -29,25 +29,18 @@
 
 REGISTER_KM_VECTOR_SOURCE(ls_file, file)
 
-void run_leaks(const char* executableName)
+void run_leaks()
 {
 	km_printf("\n");
-	const char* programname = km_strrchr(executableName, '/');
-	if (programname == NULL) {
-		programname = executableName;
-	}
-	else {
-		// skip '/'
-		programname++;
-	}
-	char* leaks = NULL;
-	km_sprintf(&leaks, "leaks %s | grep 'leaks for'", programname);
-	system(leaks);
-	free(leaks);
+	system("leaks ft_ls | grep 'leaks for'");
 }
 
 int main(int argc, const char** argv)
 {
+	#ifdef LEAKS
+		atexit(run_leaks);
+	#endif
+
 	ls_flags flags;
 	km_vector_file operands;
 
@@ -85,8 +78,5 @@ int main(int argc, const char** argv)
 	km_vector_file_destroy(&files);
 	km_vector_file_destroy(&directories);
 
-	#ifdef LEAKS
-		run_leaks(argv[0]);
-	#endif
 	return get_global_status();
 }

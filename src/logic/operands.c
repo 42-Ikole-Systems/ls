@@ -402,7 +402,7 @@ static void list_subdirectories(km_vector_file* directoryEntries, ls_flags flags
 	km_vector_file subdirFiles;
 	km_vector_file subdirDirs;
 	split_operands(directoryEntries, &subdirFiles, &subdirDirs);
-	if (status_success()) {
+	if (!status_success()) {
 		return ;
 	}
 	remove_directory_indicators(&subdirDirs);
