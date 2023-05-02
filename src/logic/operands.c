@@ -446,7 +446,7 @@ static void list_directories(const km_vector_file* directories, ls_flags flags)
 		const ls_file* file = &(directories->arr[i]);
 
 		print_directory_name(directories, file);	
-		if (!status_success()) {
+		if (get_status() == LS_SERIOUS_ERROR) {
 			return ;
 		}	
 
