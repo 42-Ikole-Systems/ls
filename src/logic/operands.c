@@ -212,7 +212,7 @@ static char* get_time(const ls_file* file)
 	const char* yearTime = (file->time < currentTime - elevenMonths) ? year : timeString;
 
 	char* result = NULL;
-	if (km_sprintf(&result , "%s %2s %.5s", month, dayNumber, yearTime) < 0) {
+	if (km_sprintf(&result , "%s %2s %5.5s", month, dayNumber, yearTime) < 0) {
 		return NULL;
 	}
 
@@ -365,7 +365,7 @@ static void print_files(const km_vector_file* files, ls_flags flags)
 				set_status(LS_SERIOUS_ERROR);
 			}
 
-			static const int fileTimeWidth = 12; // ie: `12 Apr 13:15` || ` 12 Apr 2022`
+			static const int fileTimeWidth = 12 + 1; // ie: `12 Apr 13:15` || ` 12 Apr 2022`
 			if (status_success() &&
 				km_printf("%c%s %*llu %s %s %*llu %*s %s\n",
 					entryType, // %c
@@ -374,7 +374,7 @@ static void print_files(const km_vector_file* files, ls_flags flags)
 					hardLinks, // llu
 					ownerName, // %s
 					groupName, // %s
-					filesizeWidth, //*
+					filesizeWidth, // *
 					filesize, // %llu
 					fileTimeWidth, // %*
 					fileTime, // %s
