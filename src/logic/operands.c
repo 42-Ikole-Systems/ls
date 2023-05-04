@@ -446,7 +446,7 @@ static void list_directories(const km_vector_file* directories, ls_flags flags)
 		const ls_file* file = &(directories->arr[i]);
 
 		print_directory_name(directories, file);	
-		if (get_status() == LS_SERIOUS_ERROR) {
+		if (!status_success()) {
 			return ;
 		}	
 
@@ -471,6 +471,10 @@ static void list_directories(const km_vector_file* directories, ls_flags flags)
 			list_subdirectories(&directoryEntries, flags);
 		}
 		km_vector_file_destroy(&directoryEntries);
+
+		if (get_status() == LS_MINOR_ERROR) {
+			set_status(LS_SUCCESS);
+		}
 	}
 }
 
