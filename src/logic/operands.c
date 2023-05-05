@@ -308,7 +308,7 @@ static char* get_filename(const ls_file* file, ls_flags flags)
 		return NULL;
 	}
 
-	if (file->type == symlink_type)
+	if (file->type == symlink_type && flags.long_format)
 	{
 		char* filenameWithDestination;
 		if (km_sprintf(&filenameWithDestination, "%s -> %s", filename, file->symlinkDestination) < 0) {
